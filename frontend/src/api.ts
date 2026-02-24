@@ -19,7 +19,7 @@ export interface OrderResponse {
       lat: string;
       lon: string;
       subtotal: string;
-      total_tax: string;
+      tax_amount: string;
       total_amount: string;
       timestamp: string;
       breakdown: TaxBreakdown[];

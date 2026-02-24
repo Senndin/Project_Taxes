@@ -135,10 +135,9 @@ function App() {
   const handleFetchOrders = async () => {
     setOrdersLoading(true);
     try {
-      const limitParam = displayLimit === 'All' ? '10000' : displayLimit;
-      const res = await api.fetchOrders(currentPage, limitParam);
+      const res = await api.fetchOrders(currentPage, displayLimit);
       setOrders(res.results || []);
-      const parsedLimit = parseInt(limitParam, 10);
+      const parsedLimit = parseInt(displayLimit, 10);
       setTotalPages(Math.ceil(res.count / parsedLimit) || 1);
     } catch (err) {
       console.error('Failed to load orders', err);
@@ -191,7 +190,7 @@ function App() {
           </div>
           <div className="result-row space-between">
             <span>Total Tax:</span>
-            <strong>${calcResult.total_tax}</strong>
+            <strong>${calcResult.tax_amount}</strong>
           </div>
           <div className="divider"></div>
           <div className="result-row space-between total">
@@ -281,7 +280,6 @@ function App() {
               <option value="10">Show 10</option>
               <option value="50">Show 50</option>
               <option value="100">Show 100</option>
-              <option value="All">Show All</option>
             </select>
 
             <div className="pagination-controls">
@@ -334,7 +332,7 @@ function App() {
                     <LocationDisplay lat={o.lat} lon={o.lon} />
                   </td>
                   <td>${o.subtotal}</td>
-                  <td>${o.total_tax}</td>
+                  <td>${o.tax_amount}</td>
                   <td><strong>${o.total_amount}</strong></td>
                 </tr>
               ))}
