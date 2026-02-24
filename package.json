@@ -5,6 +5,9 @@
       "engines": {
             "node": "22.x"
       },
+      "dependencies": {
+            "npm": "10.x"
+      },
       "scripts": {
             "heroku-postbuild": "cd frontend && npm install && npm run build"
       }
