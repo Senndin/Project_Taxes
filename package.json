@@ -2,7 +2,10 @@
       "name": "project_taxes",
       "version": "1.0.0",
       "description": "Root package JSON for Heroku Frontend Build",
+      "engines": {
+            "node": "22.x"
+      },
       "scripts": {
-            "build": "cd frontend && npm install && npm run build"
+            "heroku-postbuild": "cd frontend && npm install && npm run build"
       }
 }
