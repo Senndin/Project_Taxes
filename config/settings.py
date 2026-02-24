@@ -89,17 +89,15 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/assets/'
+STATIC_URL = '/static/'
 
 # WhiteNoise configuration to serve React static files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # React outputs build into frontend/dist. 
-# We serve this directory as static files root. Ensure this matches where Vite exports.
-REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
-STATICFILES_DIRS = [
-    REACT_APP_DIR,
-]
+# We serve this directory at the root level using WHITENOISE_ROOT so /assets/... works natively.
+WHITENOISE_ROOT = os.path.join(BASE_DIR, 'frontend', 'dist')
+STATICFILES_DIRS = []
 
 # Tell WhiteNoise to serve React index.html for root path implicitly if we don't catch it
 WHITENOISE_INDEX_FILE = True
