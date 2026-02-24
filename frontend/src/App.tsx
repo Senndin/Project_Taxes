@@ -140,10 +140,11 @@ function App() {
   const handleFetchOrders = async () => {
     setOrdersLoading(true);
     try {
+      const limitParam = displayLimit === 'All' ? '10000' : displayLimit;
       const orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
-      const res = await api.fetchOrders(currentPage, displayLimit, orderingParam);
+      const res = await api.fetchOrders(currentPage, limitParam, orderingParam);
       setOrders(res.results || []);
-      const parsedLimit = parseInt(displayLimit, 10);
+      const parsedLimit = parseInt(limitParam, 10);
       setTotalPages(Math.ceil(res.count / parsedLimit) || 1);
     } catch (err) {
       console.error('Failed to load orders', err);
@@ -301,6 +302,7 @@ function App() {
               <option value="10">Show 10</option>
               <option value="50">Show 50</option>
               <option value="100">Show 100</option>
+              <option value="All">Show All</option>
             </select>
 
             <div className="pagination-controls">

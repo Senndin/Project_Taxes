@@ -105,10 +105,7 @@ WHITENOISE_INDEX_FILE = True
 
 # REST Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
-    'PAGE_SIZE_QUERY_PARAM': 'limit',
-    'MAX_PAGE_SIZE': 10000,
+    'DEFAULT_PAGINATION_CLASS': 'tax_service.pagination.StandardResultsSetPagination',
 }
 
 # Celery settings

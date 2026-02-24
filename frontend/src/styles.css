@@ -338,6 +338,10 @@ button:disabled {
 /* Tables */
 .table-responsive {
       overflow-x: auto;
+      overflow-y: auto;
+      max-height: 50vh;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
 }
 
 .history-table {
@@ -358,6 +362,10 @@ button:disabled {
       font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      background-color: var(--panel-bg);
+      z-index: 10;
 }
 
 .history-table tbody tr {
@@ -435,6 +443,12 @@ button:disabled {
       cursor: pointer;
       user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
+      position: relative;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
 }
 
 .sortable-header:hover {
