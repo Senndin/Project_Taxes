@@ -28,13 +28,10 @@ function LocationDisplay({ lat, lon }: { lat: number | string, lon: number | str
         const data = await res.json();
 
         let displayLocation = '';
-        const city = data.city || data.locality;
-        const state = data.principalSubdivision || data.countryCode;
+        const city = data.city || data.locality || data.principalSubdivision;
 
-        if (city && state) {
-          displayLocation = `${city}, ${state}`;
-        } else if (city || state) {
-          displayLocation = city || state;
+        if (city) {
+          displayLocation = city;
         } else {
           displayLocation = `${numLat.toFixed(4)}, ${numLon.toFixed(4)}`; // fallback
         }
@@ -78,15 +75,12 @@ function App() {
 
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [displayLimit, setDisplayLimit] = useState('100');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     handleFetchOrders();
-  }, [displayLimit, currentPage, sortField, sortDirection]);
+  }, [sortField, sortDirection]);
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,18 +134,14 @@ function App() {
   const handleFetchOrders = async () => {
     setOrdersLoading(true);
     try {
-      const limitParam = displayLimit === 'All' ? '10000' : displayLimit;
-
       // Ensure deterministic sorting by appending secondary tie-breaker (-id)
       let orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
       if (sortField !== 'id') {
         orderingParam += ',-id';
       }
 
-      const res = await api.fetchOrders(currentPage, limitParam, orderingParam);
+      const res = await api.fetchOrders(1, '10000', orderingParam);
       setOrders(res.results || []);
-      const parsedLimit = parseInt(limitParam, 10);
-      setTotalPages(Math.ceil(res.count / parsedLimit) || 1);
     } catch (err) {
       console.error('Failed to load orders', err);
     } finally {
@@ -164,7 +154,6 @@ function App() {
       setOrdersLoading(true);
       try {
         await api.clearOrders();
-        setCurrentPage(1);
         await handleFetchOrders();
       } catch (err) {
         alert('Failed to clear orders');
@@ -283,7 +272,6 @@ function App() {
       setSortField(field);
       setSortDirection('desc'); // Default to descending when switching fields
     }
-    setCurrentPage(1); // Reset to first page
   };
 
   const getSortIcon = (field: string) => {
@@ -296,41 +284,7 @@ function App() {
       <div className="header-row space-between items-center mb-4">
         <h2>Recent Orders Registry</h2>
         <div className="table-toolbar">
-          <div className="pagination-wrapper">
-            <select
-              value={displayLimit}
-              onChange={(e) => {
-                setDisplayLimit(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pagination-select"
-            >
-              <option value="10">Show 10</option>
-              <option value="50">Show 50</option>
-              <option value="100">Show 100</option>
-              <option value="All">Show All</option>
-            </select>
 
-            <div className="pagination-controls">
-              <button
-                className="pagination-btn"
-                disabled={currentPage === 1 || ordersLoading}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              >
-                Prev
-              </button>
-              <span className="pagination-info">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                className="pagination-btn"
-                disabled={currentPage === totalPages || ordersLoading}
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              >
-                Next
-              </button>
-            </div>
-          </div>
 
           <div className="action-buttons">
             <button onClick={handleClearOrders} disabled={ordersLoading} className="btn-small btn-danger">Clear</button>
