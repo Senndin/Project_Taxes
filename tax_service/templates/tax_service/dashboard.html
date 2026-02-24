@@ -111,7 +111,7 @@
                         </div>
                         
                         <div x-show="uploadStatus?.status === 'COMPLETED'" class="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                            <strong>Success!</strong> All rows processed. <a href="#" @click.prevent="fetchOrders" class="underline font-bold">Refresh table</a>
+                            <strong>Success!</strong> All rows processed. <a href="#" @click.prevent="fetchOrders()" class="underline font-bold">Refresh table</a>
                         </div>
                         <div x-show="uploadStatus?.status === 'FAILED'" class="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700 overflow-auto max-h-32">
                             <strong>Failed!</strong> Check logs.
@@ -122,12 +122,12 @@
 
             </div>
 
-            <!-- Main Panel: Orders Table -->
+                <!-- Main Panel: Orders Table -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Processed Orders</h3>
-                        <button @click="fetchOrders" class="text-sm text-blue-600 hover:text-blue-900 flex items-center gap-1">
+                        <button @click="fetchOrders()" class="text-sm text-blue-600 hover:text-blue-900 flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                             Refresh
                         </button>
