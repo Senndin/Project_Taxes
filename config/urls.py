@@ -17,10 +17,19 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.views.generic import TemplateView
+from django.http import HttpResponse
+from django.conf import settings
+import os
+
+def index_view(request, *args, **kwargs):
+    dist_path = os.path.join(settings.BASE_DIR, 'frontend', 'dist', 'index.html')
+    if os.path.exists(dist_path):
+        return HttpResponse(open(dist_path, 'rb').read(), content_type='text/html')
+    else:
+        return HttpResponse("Frontend build not found. Did the Heroku Node.js buildpack run? Make sure to run 'heroku buildpacks:add --index 1 heroku/nodejs'", status=501)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("tax_service.urls")),
-    re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
+    re_path(r'^.*', index_view),
 ]
