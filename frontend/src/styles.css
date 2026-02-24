@@ -344,6 +344,27 @@ button:disabled {
       border-radius: 8px;
 }
 
+/* Custom Scrollbar for the table container */
+.table-responsive::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+      background: var(--panel-bg);
+      border-radius: 0 8px 8px 0;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      border: 2px solid var(--panel-bg);
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+}
+
 .history-table {
       width: 100%;
       border-collapse: collapse;
