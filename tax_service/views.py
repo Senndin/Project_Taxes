@@ -41,7 +41,18 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def clear(self, request):
-        Order.objects.all().delete()
+        from django.db import connection
+        with connection.cursor() as cursor:
+            if connection.vendor == 'postgresql':
+                cursor.execute("TRUNCATE TABLE tax_service_order RESTART IDENTITY CASCADE;")
+            elif connection.vendor == 'sqlite':
+                Order.objects.all().delete()
+                try:
+                    cursor.execute("DELETE FROM sqlite_sequence WHERE name='tax_service_order';")
+                except Exception:
+                    pass
+            else:
+                Order.objects.all().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["post"], parser_classes=[MultiPartParser])
