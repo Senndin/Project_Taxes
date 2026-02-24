@@ -72,8 +72,8 @@ export const api = {
             return response.json();
       },
 
-      async fetchOrders(limit?: string): Promise<{ count: number; results: OrderResponse[] }> {
-            const url = limit ? `${API_BASE_URL}/orders/?limit=${limit}` : `${API_BASE_URL}/orders/`;
+      async fetchOrders(page: number = 1, limit: string = '50'): Promise<{ count: number; results: OrderResponse[] }> {
+            const url = `${API_BASE_URL}/orders/?page=${page}&limit=${limit}`;
             const response = await fetch(url);
             if (!response.ok) {
                   throw new Error(`API Error: ${response.statusText}`);
