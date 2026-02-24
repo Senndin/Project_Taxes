@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
@@ -15,6 +15,9 @@ from .tasks import import_orders_task
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().order_by("-created_at")
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = '__all__'
+    ordering = ['-created_at']
 
     def get_serializer_class(self):
         if self.action == "create":

@@ -141,7 +141,13 @@ function App() {
     setOrdersLoading(true);
     try {
       const limitParam = displayLimit === 'All' ? '10000' : displayLimit;
-      const orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
+
+      // Ensure deterministic sorting by appending secondary tie-breaker (-id)
+      let orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
+      if (sortField !== 'id') {
+        orderingParam += ',-id';
+      }
+
       const res = await api.fetchOrders(currentPage, limitParam, orderingParam);
       setOrders(res.results || []);
       const parsedLimit = parseInt(limitParam, 10);

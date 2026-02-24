@@ -339,7 +339,7 @@ button:disabled {
 .table-responsive {
       overflow-x: auto;
       overflow-y: auto;
-      max-height: 50vh;
+      max-height: 65vh;
       border: 1px solid var(--panel-border);
       border-radius: 8px;
 }
@@ -445,10 +445,7 @@ button:disabled {
       transition: background-color 0.2s ease, color 0.2s ease;
       position: relative;
       white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
+      padding-right: 1.5rem !important;
 }
 
 .sortable-header:hover {
@@ -459,9 +456,10 @@ button:disabled {
 
 .sort-icon {
       font-size: 0.75rem;
-      margin-left: 0.4rem;
-      vertical-align: middle;
-      display: inline-block;
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
       transition: opacity 0.2s ease, color 0.2s ease;
 }
 
