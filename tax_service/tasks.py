@@ -53,6 +53,9 @@ def import_orders_task(self, job_id, file_content):
 
     job.status = "PROCESSING"
     job.started_at = timezone.now()
+    # Pre-compute total rows approximately
+    total_lines = len(file_content.strip().split('\n')) - 1
+    job.total_rows = max(total_lines, 0)
     job.save()
 
     service = TaxCalculationService()

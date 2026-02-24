@@ -28,10 +28,13 @@ function LocationDisplay({ lat, lon }: { lat: number | string, lon: number | str
         const data = await res.json();
 
         let displayLocation = '';
-        if (data.locality && data.principalSubdivision) {
-          displayLocation = `${data.locality}, ${data.principalSubdivision}`;
-        } else if (data.city && data.countryCode) {
-          displayLocation = `${data.city}, ${data.countryCode}`;
+        const city = data.city || data.locality;
+        const state = data.principalSubdivision || data.countryCode;
+
+        if (city && state) {
+          displayLocation = `${city}, ${state}`;
+        } else if (city || state) {
+          displayLocation = city || state;
         } else {
           displayLocation = `${numLat.toFixed(4)}, ${numLon.toFixed(4)}`; // fallback
         }
