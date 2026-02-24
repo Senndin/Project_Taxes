@@ -52,7 +52,7 @@ class TaxCalculationService:
             # Fallback for out-of-state or completely unknown zones
             # We treat this as 0% tax nexus.
             composite_rate = Decimal("0.0000")
-            breakdown = {"notice": "No tax nexus found for given coordinates."}
+            breakdown = []
             jurisdictions = []
         else:
             # 3. Compute Composite
@@ -65,30 +65,40 @@ class TaxCalculationService:
 
             # 5. Build Breakdown
             jurisdictions = [rate_record.state, rate_record.county]
-            breakdown = {
-                "state": {
+            
+            state_tax = (subtotal_dec * rate_record.rate_state).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            county_tax = (subtotal_dec * rate_record.rate_county).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+            breakdown = [
+                {
                     "name": rate_record.state,
                     "rate": str(rate_record.rate_state),
+                    "tax_amount": str(state_tax)
                 },
-                "county": {
+                {
                     "name": rate_record.county,
                     "rate": str(rate_record.rate_county),
-                },
-            }
+                    "tax_amount": str(county_tax)
+                }
+            ]
 
             if rate_record.locality and rate_record.rate_locality > 0:
                 jurisdictions.append(rate_record.locality)
-                breakdown["locality"] = {
+                locality_tax = (subtotal_dec * rate_record.rate_locality).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                breakdown.append({
                     "name": rate_record.locality,
                     "rate": str(rate_record.rate_locality),
-                }
+                    "tax_amount": str(locality_tax) # type: ignore
+                })
 
             if rate_record.rate_special and rate_record.rate_special > 0:
                 jurisdictions.append("Special District")
-                breakdown["special"] = {
+                special_tax = (subtotal_dec * rate_record.rate_special).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                breakdown.append({
                     "name": "Special District",
                     "rate": str(rate_record.rate_special),
-                }
+                    "tax_amount": str(special_tax) # type: ignore
+                })
 
         # 4. Rounding Rules - round half up to 2 decimal places
         tax_amount = (subtotal_dec * composite_rate).quantize(

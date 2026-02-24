@@ -36,6 +36,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=["post"])
+    def clear(self, request):
+        Order.objects.all().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=["post"], parser_classes=[MultiPartParser])
     def import_csv(self, request):
         serializer = ImportJobCreateSerializer(data=request.data)
@@ -43,7 +48,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         file_obj = serializer.validated_data["file"]
 
         job = ImportJob.objects.create()
-        file_path = f"/tmp/import_{job.id}.csv"
+        import os
+        upload_dir = "/app/uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = f"{upload_dir}/import_{job.id}.csv"
 
         with open(file_path, "wb+") as dest:
             for chunk in file_obj.chunks():

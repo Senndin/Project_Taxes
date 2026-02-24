@@ -1,0 +1,8 @@
+{
+      "name": "project_taxes",
+      "version": "1.0.0",
+      "description": "Root package JSON for Heroku Frontend Build",
+      "scripts": {
+            "build": "cd frontend && npm install && npm run build"
+      }
+}

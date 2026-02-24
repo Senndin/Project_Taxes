@@ -31,6 +31,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -44,7 +45,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend', 'dist')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -58,8 +59,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+import dj_database_url
+
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
+    'default': dj_database_url.config(
+        default=env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -82,12 +89,28 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/assets/'
+
+# WhiteNoise configuration to serve React static files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# React outputs build into frontend/dist. 
+# We serve this directory as static files root. Ensure this matches where Vite exports.
+REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
+STATICFILES_DIRS = [
+    REACT_APP_DIR,
+]
+
+# Tell WhiteNoise to serve React index.html for root path implicitly if we don't catch it
+WHITENOISE_INDEX_FILE = True
+
 
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+    'PAGE_SIZE_QUERY_PARAM': 'limit',
+    'MAX_PAGE_SIZE': 10000,
 }
 
 # Celery settings

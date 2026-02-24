@@ -22,9 +22,16 @@ def process_batch(task_self, service, job_id, batch):
                 lat = float(row.get("lat") or row.get("latitude"))
                 lon = float(row.get("lon") or row.get("longitude"))
                 subtotal = row.get("subtotal") or row.get("amount") or "0.00"
-                order_timestamp = (
-                    row.get("timestamp") or row.get("date") or timezone.now()
-                )
+                from django.utils.dateparse import parse_datetime
+                timestamp_str = row.get("timestamp") or row.get("date")
+                if timestamp_str:
+                    dt = parse_datetime(timestamp_str)
+                    if dt and timezone.is_naive(dt):
+                        order_timestamp = timezone.make_aware(dt)
+                    else:
+                        order_timestamp = dt or timezone.now()
+                else:
+                    order_timestamp = timezone.now()
 
                 service.process_order(
                     lat=lat, lon=lon, subtotal=subtotal, order_timestamp=order_timestamp
