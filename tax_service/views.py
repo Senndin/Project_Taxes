@@ -21,6 +21,13 @@ class FrontendDashboardView(TemplateView):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().order_by("-created_at")
 
+    @action(detail=False, methods=["post"])
+    def clear_all(self, request):
+        count, _ = Order.objects.all().delete()
+        return Response(
+            {"status": "cleared", "count": count}, status=status.HTTP_200_OK
+        )
+
     def get_serializer_class(self):
         if self.action == "create":
             return OrderCreateSerializer

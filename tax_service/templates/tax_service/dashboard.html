@@ -127,10 +127,16 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Processed Orders</h3>
-                        <button @click="fetchOrders()" class="text-sm text-blue-600 hover:text-blue-900 flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Refresh
-                        </button>
+                        <div class="flex items-center gap-4">
+                            <button @click="clearOrders()" :disabled="isLoadingClear || orders.length === 0" class="text-sm text-red-600 hover:text-red-800 focus:outline-none flex items-center gap-1 disabled:opacity-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Clear
+                            </button>
+                            <button @click="fetchOrders()" class="text-sm text-blue-600 hover:text-blue-900 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Refresh
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -147,10 +153,10 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <template x-for="order in orders" :key="order.id">
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(order.created_at)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(order.order_timestamp)"></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div x-text="order.geo_locality || order.geo_county || 'Unknown'"></div>
-                                            <div class="text-xs text-gray-500" x-text="order.geo_state"></div>
+                                            <div class="font-medium text-gray-900" x-text="order.geo_locality || 'Unincorporated'"></div>
+                                            <div class="text-xs text-gray-500" x-text="(order.geo_county || 'Unknown County') + ', ' + order.geo_state"></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500" x-text="'$' + order.subtotal"></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
@@ -285,6 +291,30 @@
                         alert('Request failed');
                     } finally {
                         this.isLoading = false;
+                    }
+                },
+
+                // Clear Table State
+                isLoadingClear: false,
+                async clearOrders() {
+                    if (!confirm("Are you sure you want to delete all processed orders? This cannot be undone.")) return;
+                    this.isLoadingClear = true;
+                    try {
+                        const res = await fetch('/api/orders/clear_all/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': this.csrftoken
+                            }
+                        });
+                        if (res.ok) {
+                            this.fetchOrders();
+                        } else {
+                            alert('Failed to clear orders');
+                        }
+                    } catch (e) {
+                        alert('Network Error');
+                    } finally {
+                        this.isLoadingClear = false;
                     }
                 },
 
