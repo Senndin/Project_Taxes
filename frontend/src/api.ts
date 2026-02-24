@@ -22,6 +22,9 @@ export interface OrderResponse {
       tax_amount: string;
       total_amount: string;
       timestamp: string;
+      geo_locality: string;
+      geo_county: string;
+      geo_state: string;
       breakdown: TaxBreakdown[];
 }
 

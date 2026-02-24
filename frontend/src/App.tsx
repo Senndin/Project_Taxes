@@ -3,63 +3,7 @@ import './styles.css';
 import type { OrderResponse, ImportResponse } from './api';
 import { api } from './api';
 
-const addressCache = new Map<string, string>();
 
-function LocationDisplay({ lat, lon }: { lat: number | string, lon: number | string }) {
-  const numLat = Number(lat);
-  const numLon = Number(lon);
-
-  const [address, setAddress] = useState<string>(`${numLat.toFixed(4)}, ${numLon.toFixed(4)}`);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const cacheKey = `${numLat},${numLon}`;
-
-    if (addressCache.has(cacheKey)) {
-      setAddress(addressCache.get(cacheKey)!);
-      setLoading(false);
-      return;
-    }
-
-    const fetchAddress = async () => {
-      try {
-        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${numLat}&longitude=${numLon}&localityLanguage=en`);
-        const data = await res.json();
-
-        let displayLocation = '';
-        const city = data.city || data.locality || data.principalSubdivision;
-
-        if (city) {
-          displayLocation = city;
-        } else {
-          displayLocation = `${numLat.toFixed(4)}, ${numLon.toFixed(4)}`; // fallback
-        }
-
-        if (isMounted) {
-          addressCache.set(cacheKey, displayLocation);
-          setAddress(displayLocation);
-        }
-      } catch (err) {
-        // Fallback to coordinates on error
-        console.error("Geocoding error", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchAddress();
-    return () => { isMounted = false; };
-  }, [numLat, numLon]);
-
-  const mapUrl = `https://www.google.com/maps?q=${numLat},${numLon}`;
-
-  return (
-    <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`location-link ${loading ? 'loading-text' : ''}`}>
-      📍 {address}
-    </a>
-  );
-}
 
 function App() {
   const [lat, setLat] = useState('40.7128');
@@ -320,7 +264,15 @@ function App() {
                 <tr key={o.id}>
                   <td>#{o.id}</td>
                   <td>
-                    <LocationDisplay lat={o.lat} lon={o.lon} />
+                    {o.geo_locality || o.geo_county || o.geo_state || "Unknown"}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 text-blue-500 hover:underline"
+                    >
+                      (Map)
+                    </a>
                   </td>
                   <td>${o.subtotal}</td>
                   <td>${o.tax_amount}</td>
