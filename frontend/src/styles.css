@@ -430,6 +430,36 @@ button:disabled {
       margin-top: 2rem;
 }
 
+/* Sortable Headers */
+.sortable-header {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sortable-header:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      /* subtle highlight */
+      color: #fff;
+}
+
+.sort-icon {
+      font-size: 0.75rem;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+      display: inline-block;
+      transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.sort-icon.inactive {
+      opacity: 0.3;
+}
+
+.sort-icon.active {
+      opacity: 1;
+      color: var(--primary-color);
+}
+
 /* Pagination & Toolbar Styles */
 .table-toolbar {
       display: flex;

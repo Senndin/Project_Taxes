@@ -78,10 +78,12 @@ function App() {
   const [displayLimit, setDisplayLimit] = useState('100');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     handleFetchOrders();
-  }, [displayLimit, currentPage]);
+  }, [displayLimit, currentPage, sortField, sortDirection]);
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +137,8 @@ function App() {
   const handleFetchOrders = async () => {
     setOrdersLoading(true);
     try {
-      const res = await api.fetchOrders(currentPage, displayLimit);
+      const orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
+      const res = await api.fetchOrders(currentPage, displayLimit, orderingParam);
       setOrders(res.results || []);
       const parsedLimit = parseInt(displayLimit, 10);
       setTotalPages(Math.ceil(res.count / parsedLimit) || 1);
@@ -263,6 +266,21 @@ function App() {
     </div>
   );
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // Default to descending when switching fields
+    }
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return <span className="sort-icon inactive">↕</span>;
+    return sortDirection === 'asc' ? <span className="sort-icon active">▲</span> : <span className="sort-icon active">▼</span>;
+  };
+
   const renderHistory = () => (
     <div className="card enter-anim full-height">
       <div className="header-row space-between items-center mb-4">
@@ -317,11 +335,19 @@ function App() {
           <table className="history-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th onClick={() => handleSort('id')} className="sortable-header">
+                  ID {getSortIcon('id')}
+                </th>
                 <th>Location</th>
-                <th>Subtotal</th>
-                <th>Tax</th>
-                <th>Total</th>
+                <th onClick={() => handleSort('subtotal')} className="sortable-header">
+                  Subtotal {getSortIcon('subtotal')}
+                </th>
+                <th onClick={() => handleSort('tax_amount')} className="sortable-header">
+                  Tax {getSortIcon('tax_amount')}
+                </th>
+                <th onClick={() => handleSort('total_amount')} className="sortable-header">
+                  Total {getSortIcon('total_amount')}
+                </th>
               </tr>
             </thead>
             <tbody>
