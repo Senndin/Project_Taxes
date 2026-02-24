@@ -135,9 +135,11 @@ function App() {
   const handleFetchOrders = async () => {
     setOrdersLoading(true);
     try {
-      const res = await api.fetchOrders(currentPage, displayLimit);
+      const limitParam = displayLimit === 'All' ? '10000' : displayLimit;
+      const res = await api.fetchOrders(currentPage, limitParam);
       setOrders(res.results || []);
-      setTotalPages(Math.ceil(res.count / parseInt(displayLimit, 10)) || 1);
+      const parsedLimit = parseInt(limitParam, 10);
+      setTotalPages(Math.ceil(res.count / parsedLimit) || 1);
     } catch (err) {
       console.error('Failed to load orders', err);
     } finally {
@@ -266,43 +268,47 @@ function App() {
     <div className="card enter-anim full-height">
       <div className="header-row space-between items-center mb-4">
         <h2>Recent Orders Registry</h2>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <select
-            value={displayLimit}
-            onChange={(e) => {
-              setDisplayLimit(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="input-small"
-            style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-glass)', color: '#fff', border: '1px solid var(--border-color)' }}
-          >
-            <option value="10">Show 10</option>
-            <option value="50">Show 50</option>
-            <option value="100">Show 100</option>
-          </select>
-          <div className="pagination-controls" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
-            <button
-              className="btn-small"
-              disabled={currentPage === 1 || ordersLoading}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              style={{ background: 'var(--panel-bg)', border: '1px solid var(--border-color)' }}
+        <div className="table-toolbar">
+          <div className="pagination-wrapper">
+            <select
+              value={displayLimit}
+              onChange={(e) => {
+                setDisplayLimit(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pagination-select"
             >
-              &lt; Prev
-            </button>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className="btn-small"
-              disabled={currentPage === totalPages || ordersLoading}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              style={{ background: 'var(--panel-bg)', border: '1px solid var(--border-color)' }}
-            >
-              Next &gt;
-            </button>
+              <option value="10">Show 10</option>
+              <option value="50">Show 50</option>
+              <option value="100">Show 100</option>
+              <option value="All">Show All</option>
+            </select>
+
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                disabled={currentPage === 1 || ordersLoading}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              >
+                Prev
+              </button>
+              <span className="pagination-info">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className="pagination-btn"
+                disabled={currentPage === totalPages || ordersLoading}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </button>
+            </div>
           </div>
-          <button onClick={handleClearOrders} disabled={ordersLoading} className="btn-small" style={{ background: '#ef4444', marginLeft: '16px' }}>Clear</button>
-          <button onClick={handleFetchOrders} disabled={ordersLoading} className="btn-small">Refresh</button>
+
+          <div className="action-buttons">
+            <button onClick={handleClearOrders} disabled={ordersLoading} className="btn-small btn-danger">Clear</button>
+            <button onClick={handleFetchOrders} disabled={ordersLoading} className="btn-small btn-primary">Refresh</button>
+          </div>
         </div>
       </div>
 
