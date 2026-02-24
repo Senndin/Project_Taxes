@@ -17,8 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from tax_service.views import FrontendDashboardView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("tax_service.urls")),
+    path("", FrontendDashboardView.as_view(), name="dashboard"),
 ]

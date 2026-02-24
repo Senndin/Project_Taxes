@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
+from django.views.generic import TemplateView
 from .models import Order, ImportJob
 from .serializers import (
     OrderSerializer,
@@ -11,6 +12,10 @@ from .serializers import (
 )
 from .services import TaxCalculationService
 from .tasks import import_orders_task
+
+
+class FrontendDashboardView(TemplateView):
+    template_name = "tax_service/dashboard.html"
 
 
 class OrderViewSet(viewsets.ModelViewSet):
