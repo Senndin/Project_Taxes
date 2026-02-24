@@ -44,7 +44,7 @@ def process_batch(task_self, service, job_id, batch):
 
 
 @shared_task(bind=True)
-def import_orders_task(self, job_id, file_path):
+def import_orders_task(self, job_id, file_content):
     try:
         job = ImportJob.objects.get(id=job_id)
     except ImportJob.DoesNotExist:
@@ -65,29 +65,29 @@ def import_orders_task(self, job_id, file_path):
     errors = []
 
     try:
-        with open(file_path, mode="r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+        f = io.StringIO(file_content)
+        reader = csv.DictReader(f)
 
-            for row_idx, row in enumerate(reader, start=1):
-                batch.append((row_idx, row))
+        for row_idx, row in enumerate(reader, start=1):
+            batch.append((row_idx, row))
 
-                if len(batch) >= batch_size:
-                    s, f_err = process_batch(self, service, job_id, batch)
-                    total_success += s
-                    errors.extend(f_err)
-                    total_failed += len(f_err)
-                    total_processed += len(batch)
-                    batch = []
-
-                    job.processed_rows = total_processed
-                    job.save(update_fields=["processed_rows"])
-
-            if batch:
+            if len(batch) >= batch_size:
                 s, f_err = process_batch(self, service, job_id, batch)
                 total_success += s
                 errors.extend(f_err)
                 total_failed += len(f_err)
                 total_processed += len(batch)
+                batch = []
+
+                job.processed_rows = total_processed
+                job.save(update_fields=["processed_rows"])
+
+        if batch:
+            s, f_err = process_batch(self, service, job_id, batch)
+            total_success += s
+            errors.extend(f_err)
+            total_failed += len(f_err)
+            total_processed += len(batch)
 
         job.status = "COMPLETED"
         job.total_rows = total_processed
@@ -106,6 +106,3 @@ def import_orders_task(self, job_id, file_path):
         )
         job.finished_at = timezone.now()
         job.save()
-    finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)

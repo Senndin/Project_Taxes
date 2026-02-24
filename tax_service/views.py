@@ -48,17 +48,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         file_obj = serializer.validated_data["file"]
 
         job = ImportJob.objects.create()
-        import os
-        upload_dir = "/app/uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = f"{upload_dir}/import_{job.id}.csv"
+        
+        try:
+            file_content = file_obj.read().decode('utf-8-sig')
+        except UnicodeDecodeError:
+            file_content = file_obj.read().decode('latin-1')
 
-        with open(file_path, "wb+") as dest:
-            for chunk in file_obj.chunks():
-                dest.write(chunk)
-
-        # Fire off celery task
-        import_orders_task.delay(job.id, file_path)
+        # Fire off celery task passing the content directly via Redis.
+        # This completely avoids Heroku's ephemeral/isolated filesystem issues.
+        import_orders_task.delay(job.id, file_content)
 
         return Response(ImportJobSerializer(job).data, status=status.HTTP_202_ACCEPTED)
 
