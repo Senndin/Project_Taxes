@@ -18,6 +18,8 @@ class GeocodeResult:
 
 
 class GeocodeProvider:
+    provider_name = "unknown"
+
     def resolve(self, lat: float, lon: float) -> GeocodeResult:
         raise NotImplementedError("Subclasses must implement resolve")
 
@@ -25,6 +27,7 @@ class GeocodeProvider:
 class NominatimProvider(GeocodeProvider):
     # Base Nominatim URL
     URL = "https://nominatim.openstreetmap.org/reverse"
+    provider_name = "nominatim"
 
     def resolve(self, lat: float, lon: float) -> GeocodeResult:
         # Round to 4 decimal places (approx 11m precision)
@@ -35,7 +38,7 @@ class NominatimProvider(GeocodeProvider):
             Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
 
-        cache_key = f"nominatim_{lat_rounded}_{lon_rounded}"
+        cache_key = f"{self.provider_name}_{lat_rounded}_{lon_rounded}"
 
         # 1. Check Local DB Cache
         cached = GeocodeCache.objects.filter(cache_key=cache_key).first()
@@ -96,7 +99,7 @@ class NominatimProvider(GeocodeProvider):
         # 5. Save to Cache
         GeocodeCache.objects.create(
             cache_key=cache_key,
-            provider="nominatim",
+            provider=self.provider_name,
             lat_rounded=lat_rounded,
             lon_rounded=lon_rounded,
             state=result.state,

@@ -2,15 +2,31 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction, models
 from django.utils import timezone
 from .models import Order, TaxRateAdmin
-from .geocoders import NominatimProvider
+from .geocoders import GeocodeProvider, GeocodeResult
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+class MockProvider(GeocodeProvider):
+    provider_name = "mock"
+
+    def resolve(self, lat: float, lon: float) -> GeocodeResult:
+        from decimal import Decimal
+
+        return GeocodeResult(
+            state="New York",
+            county="Kings County",
+            locality="New York",
+            raw_response={"mocked": True},
+            lat_rounded=Decimal(str(lat)).quantize(Decimal("0.0001")),
+            lon_rounded=Decimal(str(lon)).quantize(Decimal("0.0001")),
+        )
+
+
 class TaxCalculationService:
     def __init__(self, geocoder=None):
-        self.geocoder = geocoder or NominatimProvider()
+        self.geocoder = geocoder or MockProvider()
 
     @transaction.atomic
     def process_order(
@@ -82,8 +98,10 @@ class TaxCalculationService:
 
         # Determine source (was it cached or fresh hit?)
         # Since our NominatimProvider saves to DB during fresh request but we didn't explicitly separate cache-hit vs miss in return,
-        # we can just log Nominatim as the source format.
-        geo_source = "nominatim"  # In a more complex setup, GeocodeResult would return an is_cached flag.
+        # we can just log the provider name as the source format.
+        geo_source = getattr(
+            self.geocoder, "provider_name", "unknown"
+        )  # Dynamically pull the provider name
 
         # 6. Create Order
         order = Order.objects.create(

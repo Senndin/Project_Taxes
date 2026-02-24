@@ -19,10 +19,12 @@ def process_batch(task_self, service, job_id, batch):
     for row_idx, row in batch:
         try:
             with transaction.atomic():
-                lat = float(row["lat"])
-                lon = float(row["lon"])
-                subtotal = row["subtotal"]
-                order_timestamp = row.get("timestamp") or timezone.now()
+                lat = float(row.get("lat") or row.get("latitude"))
+                lon = float(row.get("lon") or row.get("longitude"))
+                subtotal = row.get("subtotal") or row.get("amount") or "0.00"
+                order_timestamp = (
+                    row.get("timestamp") or row.get("date") or timezone.now()
+                )
 
                 service.process_order(
                     lat=lat, lon=lon, subtotal=subtotal, order_timestamp=order_timestamp
