@@ -264,7 +264,7 @@ function App() {
                 <tr key={o.id}>
                   <td>#{o.id}</td>
                   <td>
-                    {o.geo_locality || o.geo_county || o.geo_state || "Unknown"}
+                    {[o.geo_locality, o.geo_county, o.geo_state].filter(Boolean).join(", ") || "Unknown Location"}
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
                       target="_blank"
