@@ -323,24 +323,31 @@ function App() {
                         <td colSpan={6} style={{ padding: 0 }}>
                           <div className="breakdown-dropdown slide-down">
                             <h4 className="mb-2 text-sm text-gray-400">Jurisdictions Breakdown</h4>
-                            <table className="sub-table">
-                              <thead>
-                                <tr>
-                                  <th>Jurisdiction</th>
-                                  <th>Tax Rate</th>
-                                  <th>Tax Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {o.breakdown.map((b, idx) => (
-                                  <tr key={idx}>
-                                    <td>{b.name}</td>
-                                    <td>{(parseFloat(b.rate) * 100).toFixed(3)}%</td>
-                                    <td>${b.tax_amount}</td>
+                            {o.breakdown.length > 0 ? (
+                              <table className="sub-table">
+                                <thead>
+                                  <tr>
+                                    <th>Jurisdiction</th>
+                                    <th>Tax Rate</th>
+                                    <th>Tax Amount</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {o.breakdown.map((b, idx) => (
+                                    <tr key={idx}>
+                                      <td>{b.name}</td>
+                                      <td>{(parseFloat(b.rate) * 100).toFixed(3)}%</td>
+                                      <td>${b.tax_amount}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            ) : (
+                              <p className="text-sm text-gray-400 p-4 bg-[rgba(0,0,0,0.1)] rounded italic">
+                                No local tax jurisdictions apply to this coordinate. <br />
+                                (Out of State / No Nexus / 0% Tax Rate)
+                              </p>
+                            )}
                           </div>
                         </td>
                       </tr>
