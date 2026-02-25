@@ -130,8 +130,30 @@ class LocalNYSProvider(GeocodeProvider):
         if results and len(results) > 0:
             match = results[0]
             assigned_state = match.get('admin1', 'Unknown State')
-            assigned_county = match.get('admin2', 'Unknown County')
             assigned_locality = match.get('name', 'Unknown Locality')
+            
+            # The KD-Tree dataset frequently leaves admin2 blank for NYC boroughs.
+            raw_county = match.get('admin2', '')
+            
+            if not raw_county:
+                # Fallback heuristics for New York City coordinates which lack county data in the offline array
+                if assigned_locality in ['New York City', 'New York', 'Manhattan']:
+                    assigned_county = "New York County"
+                elif assigned_locality == 'Brooklyn':
+                    assigned_county = "Kings County"
+                elif assigned_locality == 'Queens':
+                    assigned_county = "Queens County"
+                elif assigned_locality == 'Bronx':
+                    assigned_county = "Bronx County"
+                elif assigned_locality == 'Staten Island':
+                    assigned_county = "Richmond County"
+                else:
+                    assigned_county = "Unknown County"
+            else:
+                assigned_county = raw_county
+                # Normalize "Kings" -> "Kings County" to strictly match DB seed
+                if "County" not in assigned_county and assigned_state == "New York":
+                    assigned_county = f"{assigned_county} County"
             
         return GeocodeResult(
             state=assigned_state,
