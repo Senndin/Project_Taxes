@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './styles.css';
 import type { OrderResponse, ImportResponse } from './api';
 import { api } from './api';
@@ -19,8 +20,9 @@ function App() {
 
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [sortField, setSortField] = useState('created_at');
+  const [sortField, setSortField] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
   useEffect(() => {
     handleFetchOrders();
@@ -79,7 +81,7 @@ function App() {
     setOrdersLoading(true);
     try {
       // Ensure deterministic sorting by appending secondary tie-breaker (-id)
-      let orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
+      let orderingParam = sortDirection === 'desc' ? `- ${sortField} ` : sortField;
       if (sortField !== 'id') {
         orderingParam += ',-id';
       }
@@ -184,12 +186,12 @@ function App() {
 
       {uploadStatus && (
         <div className="result-card fade-in mt-4">
-          <h3>Import Status: <span className={`status badge-${uploadStatus.status.toLowerCase()}`}>{uploadStatus.status}</span></h3>
+          <h3>Import Status: <span className={`status badge - ${uploadStatus.status.toLowerCase()} `}>{uploadStatus.status}</span></h3>
           <p>Total Rows: {uploadStatus.total_rows}</p>
           <div className="progress-bar">
             <div
               className="progress-fill"
-              style={{ width: `${uploadStatus.total_rows ? (uploadStatus.processed_rows / uploadStatus.total_rows) * 100 : 0}%` }}
+              style={{ width: `${uploadStatus.total_rows ? (uploadStatus.processed_rows / uploadStatus.total_rows) * 100 : 0}% ` }}
             ></div>
           </div>
           <p className="mt-2 text-sm">Processed: {uploadStatus.processed_rows} | Errors: {uploadStatus.error_rows}</p>
@@ -234,9 +236,9 @@ function App() {
 
     if (specific) {
       if (addressObj.house_number && addressObj.road) {
-        return `${addressObj.house_number} ${addressObj.road}, ${broader}`;
+        return `${addressObj.house_number} ${addressObj.road}, ${broader} `;
       }
-      return `${specific}, ${broader}`;
+      return `${specific}, ${broader} `;
     }
 
     return [o.geo_locality, o.geo_county, o.geo_state].filter(Boolean).join(", ") || "Unknown Location";
@@ -269,6 +271,7 @@ function App() {
             <table className="history-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px' }}></th>
                   <th onClick={() => handleSort('id')} className="sortable-header">
                     ID {getSortIcon('id')}
                   </th>
@@ -286,34 +289,67 @@ function App() {
               </thead>
               <tbody>
                 {orders.map(o => (
-                  <tr key={o.id}>
-                    <td>#{o.id}</td>
-                    <td>
-                      {getSpecificLocation(o)}
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="map-icon-link"
-                        title="View on Google Maps"
-                      >
-                        <svg xmlns="http://www.w3.org/0000.svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="map-svg">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                          <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                      </a>
-                    </td>
-                    <td>${o.subtotal}</td>
-                    <td>${o.tax_amount}</td>
-                    <td><strong>${o.total_amount}</strong></td>
-                  </tr>
+                  <React.Fragment key={o.id}>
+                    <tr onClick={() => setExpandedRow(expandedRow === o.id ? null : o.id)} style={{ cursor: 'pointer' }}>
+                      <td className="expand-toggle">
+                        {expandedRow === o.id ? '−' : '+'}
+                      </td>
+                      <td>#{o.id}</td>
+                      <td>
+                        {getSpecificLocation(o)}
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="map-icon-link"
+                          title="View on Google Maps"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg xmlns="http://www.w3.org/0000.svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="map-svg">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                          </svg>
+                        </a >
+                      </td >
+                      <td>${o.subtotal}</td>
+                      <td>${o.tax_amount}</td>
+                      <td><strong>${o.total_amount}</strong></td>
+                    </tr >
+                    {expandedRow === o.id && (
+                      <tr className="expanded-row-content">
+                        <td colSpan={6} style={{ padding: 0 }}>
+                          <div className="breakdown-dropdown slide-down">
+                            <h4 className="mb-2 text-sm text-gray-400">Jurisdictions Breakdown</h4>
+                            <table className="sub-table">
+                              <thead>
+                                <tr>
+                                  <th>Jurisdiction</th>
+                                  <th>Tax Rate</th>
+                                  <th>Tax Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {o.breakdown.map((b, idx) => (
+                                  <tr key={idx}>
+                                    <td>{b.name}</td>
+                                    <td>{(parseFloat(b.rate) * 100).toFixed(3)}%</td>
+                                    <td>${b.tax_amount}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment >
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </tbody >
+            </table >
+          </div >
+        </div >
       )}
-    </div>
+    </div >
   );
 
   return (
