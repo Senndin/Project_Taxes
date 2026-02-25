@@ -45,7 +45,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         from django.db import connection
         with connection.cursor() as cursor:
             if connection.vendor == 'postgresql':
-                cursor.execute("TRUNCATE TABLE tax_service_order RESTART IDENTITY CASCADE;")
+                table_name = connection.ops.quote_name(Order._meta.db_table)
+                cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;")
             elif connection.vendor == 'sqlite':
                 Order.objects.all().delete()
                 try:
