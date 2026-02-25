@@ -259,51 +259,58 @@ function App() {
       {orders.length === 0 && !ordersLoading ? (
         <div className="empty-state">No orders loaded yet. Calculate one or upload CSV.</div>
       ) : (
-        <div className="table-responsive">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th onClick={() => handleSort('id')} className="sortable-header">
-                  ID {getSortIcon('id')}
-                </th>
-                <th>Location</th>
-                <th onClick={() => handleSort('subtotal')} className="sortable-header">
-                  Subtotal {getSortIcon('subtotal')}
-                </th>
-                <th onClick={() => handleSort('tax_amount')} className="sortable-header">
-                  Tax {getSortIcon('tax_amount')}
-                </th>
-                <th onClick={() => handleSort('total_amount')} className="sortable-header">
-                  Total {getSortIcon('total_amount')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map(o => (
-                <tr key={o.id}>
-                  <td>#{o.id}</td>
-                  <td>
-                    {getSpecificLocation(o)}
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="map-icon-link"
-                      title="View on Google Maps"
-                    >
-                      <svg xmlns="http://www.w3.org/0000.svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="map-svg">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                    </a>
-                  </td>
-                  <td>${o.subtotal}</td>
-                  <td>${o.tax_amount}</td>
-                  <td><strong>${o.total_amount}</strong></td>
+        <div className="table-wrapper">
+          {ordersLoading && orders.length > 0 && (
+            <div className="table-overlay">
+              <div className="spinner"></div>
+            </div>
+          )}
+          <div className="table-responsive">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort('id')} className="sortable-header">
+                    ID {getSortIcon('id')}
+                  </th>
+                  <th>Location</th>
+                  <th onClick={() => handleSort('subtotal')} className="sortable-header">
+                    Subtotal {getSortIcon('subtotal')}
+                  </th>
+                  <th onClick={() => handleSort('tax_amount')} className="sortable-header">
+                    Tax {getSortIcon('tax_amount')}
+                  </th>
+                  <th onClick={() => handleSort('total_amount')} className="sortable-header">
+                    Total {getSortIcon('total_amount')}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {orders.map(o => (
+                  <tr key={o.id}>
+                    <td>#{o.id}</td>
+                    <td>
+                      {getSpecificLocation(o)}
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="map-icon-link"
+                        title="View on Google Maps"
+                      >
+                        <svg xmlns="http://www.w3.org/0000.svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="map-svg">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                      </a>
+                    </td>
+                    <td>${o.subtotal}</td>
+                    <td>${o.tax_amount}</td>
+                    <td><strong>${o.total_amount}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
