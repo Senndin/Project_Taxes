@@ -80,13 +80,13 @@ function App() {
     setOrdersLoading(true);
     try {
       // Ensure deterministic sorting by appending secondary tie-breaker (-id)
-      let orderingParam = sortDirection === 'desc' ? `- ${sortField} ` : sortField;
+      let orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
       if (sortField !== 'id') {
         orderingParam += ',-id';
       }
 
       // Add a cache buster timestamp string appended to ordering or a dummy param to force a network request
-      const res = await api.fetchOrders(1, '10000', orderingParam);
+      const res = await api.fetchOrders(1, '50000', orderingParam);
       setOrders(res.results || []);
     } catch (err) {
       console.error('Failed to load orders', err);
