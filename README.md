@@ -68,7 +68,7 @@ If you wish to spin up the application on your own local machine, this repositor
 ### Prerequisites
 
 - [Docker Engine & Docker Compose](https://docs.docker.com/get-docker/) installed.
-- Ensure ports `8000` (Backend server), `5173` (Frontend Vite server), `5432` (Postgres), and `6379` (Redis) are available.
+- Ensure ports `80` (Frontend), `8000` (Backend server), and `6379` (Redis) are available on your machine.
 
 ### Quickstart
 
@@ -76,14 +76,13 @@ If you wish to spin up the application on your own local machine, this repositor
 
    ```bash
    git clone <repository_url> .
-   docker-compose build
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
-   *(Docker will pull the images, initialize Postgres and Redis, run Python migrations, collect static files, and start both the backend API and the frontend node dev server automatically).*
+   *(Docker will pull the images, initialize the local SQLite database, run Python migrations, start Redis, start the Celery worker, and boot both the backend API and the frontend Nginx server automatically).*
 
 2. **Access the Application:**
-   - **Frontend UI (React Calculator & Registry):** <http://localhost:5173>
+   - **Frontend UI (React Calculator & Registry):** <http://localhost> *(Port 80)*
    - **Backend API Interface:** <http://localhost:8000/api/>
    - **Django Admin Panel:** <http://localhost:8000/admin/>
 
