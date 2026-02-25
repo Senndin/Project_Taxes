@@ -23,8 +23,14 @@ function App() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   useEffect(() => {
-    handleFetchOrders();
+    // Reset state and fetch page 1 whenever sorting changes
+    setPage(1);
+    fetchPage(1, true);
   }, [sortField, sortDirection]);
 
   const handleCalculate = async (e: React.FormEvent) => {
@@ -76,22 +82,49 @@ function App() {
     }
   };
 
-  const handleFetchOrders = async () => {
-    setOrdersLoading(true);
+  const fetchPage = async (pageNum: number, clearList = false) => {
+    if (clearList) {
+      setOrdersLoading(true);
+    } else {
+      setIsFetchingMore(true);
+    }
     try {
-      // Ensure deterministic sorting by appending secondary tie-breaker (-id)
       let orderingParam = sortDirection === 'desc' ? `-${sortField}` : sortField;
       if (sortField !== 'id') {
         orderingParam += ',-id';
       }
 
-      // Add a cache buster timestamp string appended to ordering or a dummy param to force a network request
-      const res = await api.fetchOrders(1, '50000', orderingParam);
-      setOrders(res.results || []);
+      // Progressive loading: chunk size of 50 for instant rendering
+      const res = await api.fetchOrders(pageNum, '50', orderingParam);
+
+      if (clearList) {
+        setOrders(res.results || []);
+      } else {
+        setOrders(prev => {
+          const existingIds = new Set(prev.map(o => o.id));
+          const uniqueNew = (res.results || []).filter(o => !existingIds.has(o.id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+
+      setHasMore(!!res.next);
+      setPage(pageNum);
     } catch (err) {
       console.error('Failed to load orders', err);
     } finally {
-      setOrdersLoading(false);
+      if (clearList) setOrdersLoading(false);
+      else setIsFetchingMore(false);
+    }
+  };
+
+  const handleFetchOrders = async () => {
+    fetchPage(1, true);
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isFetchingMore && hasMore && !ordersLoading) {
+      fetchPage(page + 1, false);
     }
   };
 
@@ -265,12 +298,12 @@ function App() {
         <div className="empty-state">No orders loaded yet. Calculate one or upload CSV.</div>
       ) : (
         <div className="table-wrapper">
-          {ordersLoading && orders.length > 0 && (
+          {ordersLoading && orders.length === 0 && (
             <div className="table-overlay">
               <div className="spinner"></div>
             </div>
           )}
-          <div className="table-responsive">
+          <div className="table-responsive" onScroll={handleScroll}>
             <table className="history-table">
               <thead>
                 <tr>
