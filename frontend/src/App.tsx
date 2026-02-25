@@ -124,8 +124,8 @@ function App() {
           Subtotal ($):
           <input type="text" value={subtotal} onChange={e => setSubtotal(e.target.value)} required />
         </label>
-        <button type="submit" disabled={calcLoading}>
-          {calcLoading ? 'Calculating...' : 'Calculate Tax'}
+        <button type="submit" disabled={calcLoading} className="full-width relative mt-4">
+          {calcLoading ? 'Registering...' : 'Register New Order'}
         </button>
       </form>
 

@@ -60,7 +60,7 @@ class TaxCalculationService:
                     "tax_amount": str(state_tax)
                 },
                 {
-                    "name": rate_record.county,
+                    "name": rate_record.county if rate_record.county else "County (Generic)",
                     "rate": str(rate_record.rate_county),
                     "tax_amount": str(county_tax)
                 }
