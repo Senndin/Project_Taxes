@@ -110,7 +110,7 @@ function App() {
 
   const renderCalculator = () => (
     <div className="card enter-anim">
-      <h2>Myttevye Tax Calculator</h2>
+      <h2>Manual Tax Calculator</h2>
       <form onSubmit={handleCalculate} className="form-group">
         <label>
           Latitude:
