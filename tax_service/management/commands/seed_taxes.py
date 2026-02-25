@@ -8,9 +8,8 @@ class Command(BaseCommand):
     help = "Seeds the database with foundational New York State sales tax jurisdictions"
 
     def handle(self, *args, **kwargs):
-        if TaxRateAdmin.objects.count() > 10:
-            self.stdout.write(self.style.WARNING("Database already seeded. Skipping."))
-            return
+        # always run this to sync data since arrays get updated 
+        pass
 
         now = timezone.now()
 
@@ -18,98 +17,43 @@ class Command(BaseCommand):
         state_rate = Decimal("0.0400")
 
         rates = [
-            # Generic State fallback (if county is unknown but state is NY)
-            {
-                "county": "",
-                "locality": None,
-                "rate_county": "0.0400",
-                "rate_special": "0.0000",
-            },
-            # Major Counties
-            {
-                "county": "Kings County",
-                "locality": "New York",
-                "rate_county": "0.0450",
-                "rate_special": "0.0037",
-            },  # Brooklyn
-            {
-                "county": "New York County",
-                "locality": "New York",
-                "rate_county": "0.0450",
-                "rate_special": "0.0037",
-            },  # Manhattan
-            {
-                "county": "Queens County",
-                "locality": "New York",
-                "rate_county": "0.0450",
-                "rate_special": "0.0037",
-            },  # Queens
-            {
-                "county": "Bronx County",
-                "locality": "New York",
-                "rate_county": "0.0450",
-                "rate_special": "0.0037",
-            },  # Bronx
-            {
-                "county": "Richmond County",
-                "locality": "New York",
-                "rate_county": "0.0450",
-                "rate_special": "0.0037",
-            },  # Staten Island
-            {
-                "county": "Erie County",
-                "locality": None,
-                "rate_county": "0.0475",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Albany County",
-                "locality": None,
-                "rate_county": "0.0400",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Monroe County",
-                "locality": None,
-                "rate_county": "0.0400",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Onondaga County",
-                "locality": None,
-                "rate_county": "0.0400",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Westchester County",
-                "locality": None,
-                "rate_county": "0.0437",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Nassau County",
-                "locality": None,
-                "rate_county": "0.0462",
-                "rate_special": "0.0000",
-            },
-            {
-                "county": "Suffolk County",
-                "locality": None,
-                "rate_county": "0.0462",
-                "rate_special": "0.0000",
-            },
+            {"county": "Albany County", "rate_county": "0.0400"},
+            {"county": "Allegany County", "rate_county": "0.0450"},
+            {"county": "Bronx County", "rate_county": "0.0488"},
+            {"county": "Broome County", "rate_county": "0.0400"},
+            {"county": "Cattaraugus County", "rate_county": "0.0475"},
+            {"county": "Cayuga County", "rate_county": "0.0400"},
+            {"county": "Chautauqua County", "rate_county": "0.0400"},
+            {"county": "Chemung County", "rate_county": "0.0400"},
+            {"county": "Dutchess County", "rate_county": "0.0413"},
+            {"county": "Erie County", "rate_county": "0.0475"},
+            {"county": "Kings County", "rate_county": "0.0488"},
+            {"county": "Nassau County", "rate_county": "0.0488"},
+            {"county": "New York County", "rate_county": "0.0488"},
+            {"county": "Niagara County", "rate_county": "0.0475"},
+            {"county": "Oneida County", "rate_county": "0.0475"},
+            {"county": "Orange County", "rate_county": "0.0413"},
+            {"county": "Putnam County", "rate_county": "0.0413"},
+            {"county": "Queens County", "rate_county": "0.0488"},
+            {"county": "Richmond County", "rate_county": "0.0488"},
+            {"county": "Rockland County", "rate_county": "0.0413"},
+            {"county": "Suffolk County", "rate_county": "0.0463"},
+            {"county": "Westchester County", "rate_county": "0.0438"},
+            # Generic State fallback (if county is unknown but state is NY) 0% county tax
+            {"county": "", "rate_county": "0.0000"} 
         ]
 
+        TaxRateAdmin.objects.all().delete() # ensure idempotency for script reruns
         created = 0
         for data in rates:
             TaxRateAdmin.objects.create(
                 state="New York",
                 county=data["county"],
-                locality=data["locality"],
+                locality=None,
                 rate_state=state_rate,
                 rate_county=Decimal(data["rate_county"]),
                 rate_locality=Decimal("0.0000"),
-                rate_special=Decimal(data["rate_special"]),
+                rate_special=None,
                 valid_from=now,
             )
             created += 1
