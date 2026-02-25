@@ -110,36 +110,33 @@ class NominatimProvider(GeocodeProvider):
 
         return result
 
-class LocalNYCProvider(GeocodeProvider):
-    provider_name = "local_nyc"
+class LocalNYSProvider(GeocodeProvider):
+    provider_name = "local_nys"
 
     def resolve(self, lat: float, lon: float) -> GeocodeResult:
         from decimal import Decimal
-        boroughs = [
-            {"id": "Manhattan", "county": "New York County", "lat": 40.7831, "lon": -73.9712},
-            {"id": "Brooklyn", "county": "Kings County", "lat": 40.6782, "lon": -73.9442},
-            {"id": "Queens", "county": "Queens County", "lat": 40.7282, "lon": -73.7949},
-            {"id": "Bronx", "county": "Bronx County", "lat": 40.8448, "lon": -73.8648},
-            {"id": "Staten Island", "county": "Richmond County", "lat": 40.5795, "lon": -74.1502},
-        ]
+        import reverse_geocoder as rg
         
-        assigned_borough = "New York"
+        # Search returns a list of dictionaries. For example:
+        # [{'lat': '41.92704', 'lon': '-73.99736', 'name': 'Kingston', 'admin1': 'New York', 'admin2': 'Ulster County', 'cc': 'US'}]
+        results = rg.search((lat, lon))
+        
+        assigned_state = "Unknown State"
         assigned_county = "Unknown County"
-        min_distance = float('inf')
+        assigned_locality = "Unknown Locality"
+        assigned_suburb = ""
         
-        for b in boroughs:
-            # Simple Euclidean distance squared (sufficient for distinguishing adjacent NYC boroughs)
-            dist = (lat - b["lat"])**2 + (lon - b["lon"])**2
-            if dist < min_distance:
-                min_distance = dist
-                assigned_borough = b["id"]
-                assigned_county = b["county"]
-
+        if results and len(results) > 0:
+            match = results[0]
+            assigned_state = match.get('admin1', 'Unknown State')
+            assigned_county = match.get('admin2', 'Unknown County')
+            assigned_locality = match.get('name', 'Unknown Locality')
+            
         return GeocodeResult(
-            state="New York",
+            state=assigned_state,
             county=assigned_county,
-            locality="New York",
-            raw_response={"address": {"suburb": assigned_borough, "city": "New York", "county": assigned_county}},
+            locality=assigned_locality,
+            raw_response={"address": {"city": assigned_locality, "county": assigned_county, "state": assigned_state}},
             lat_rounded=Decimal(str(lat)).quantize(Decimal("0.0001")),
             lon_rounded=Decimal(str(lon)).quantize(Decimal("0.0001")),
         )
