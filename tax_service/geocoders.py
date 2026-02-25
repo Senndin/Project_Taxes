@@ -109,3 +109,35 @@ class NominatimProvider(GeocodeProvider):
         )
 
         return result
+
+class LocalNYCProvider(GeocodeProvider):
+    provider_name = "local_nyc"
+
+    def resolve(self, lat: float, lon: float) -> GeocodeResult:
+        from decimal import Decimal
+        # Rough bounding boxes for the 5 NYC boroughs
+        boroughs = [
+            {"id": "Manhattan", "county": "New York County", "lat": (40.70, 40.88), "lon": (-74.02, -73.91)},
+            {"id": "Brooklyn", "county": "Kings County", "lat": (40.57, 40.74), "lon": (-74.04, -73.85)},
+            {"id": "Queens", "county": "Queens County", "lat": (40.54, 40.80), "lon": (-73.96, -73.70)},
+            {"id": "Bronx", "county": "Bronx County", "lat": (40.78, 40.91), "lon": (-73.93, -73.76)},
+            {"id": "Staten Island", "county": "Richmond County", "lat": (40.50, 40.65), "lon": (-74.25, -74.05)},
+        ]
+        
+        assigned_borough = "New York"
+        assigned_county = "Unknown County"
+        
+        for b in boroughs:
+            if b["lat"][0] <= lat <= b["lat"][1] and b["lon"][0] <= lon <= b["lon"][1]:
+                assigned_borough = b["id"]
+                assigned_county = b["county"]
+                break
+
+        return GeocodeResult(
+            state="New York",
+            county=assigned_county,
+            locality="New York",
+            raw_response={"address": {"suburb": assigned_borough, "city": "New York", "county": assigned_county}},
+            lat_rounded=Decimal(str(lat)).quantize(Decimal("0.0001")),
+            lon_rounded=Decimal(str(lon)).quantize(Decimal("0.0001")),
+        )

@@ -10,6 +10,7 @@ from .serializers import (
     ImportJobCreateSerializer,
 )
 from .services import TaxCalculationService
+from .geocoders import NominatimProvider
 from .tasks import import_orders_task
 
 
@@ -29,7 +30,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        service = TaxCalculationService()
+        service = TaxCalculationService(geocoder=NominatimProvider())
         order = service.process_order(
             lat=data["lat"],
             lon=data["lon"],

@@ -2,31 +2,15 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction, models
 from django.utils import timezone
 from .models import Order, TaxRateAdmin
-from .geocoders import GeocodeProvider, GeocodeResult
+from .geocoders import GeocodeProvider, GeocodeResult, LocalNYCProvider
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class MockProvider(GeocodeProvider):
-    provider_name = "mock"
-
-    def resolve(self, lat: float, lon: float) -> GeocodeResult:
-        from decimal import Decimal
-
-        return GeocodeResult(
-            state="New York",
-            county="Kings County",
-            locality="New York",
-            raw_response={"mocked": True},
-            lat_rounded=Decimal(str(lat)).quantize(Decimal("0.0001")),
-            lon_rounded=Decimal(str(lon)).quantize(Decimal("0.0001")),
-        )
-
-
 class TaxCalculationService:
     def __init__(self, geocoder=None):
-        self.geocoder = geocoder or MockProvider()
+        self.geocoder = geocoder or LocalNYCProvider()
 
     @transaction.atomic
     def process_order(

@@ -223,6 +223,25 @@ function App() {
     return sortDirection === 'asc' ? <span className="sort-icon active">▲</span> : <span className="sort-icon active">▼</span>;
   };
 
+  const getSpecificLocation = (o: OrderResponse) => {
+    let addressObj: any = {};
+    if (o.geo_raw_response && o.geo_raw_response.address) {
+      addressObj = o.geo_raw_response.address;
+    }
+
+    const specific = addressObj.road || addressObj.neighbourhood || addressObj.suburb || addressObj.city_district || addressObj.village || addressObj.town;
+    const broader = addressObj.county || addressObj.city || o.geo_county || o.geo_locality;
+
+    if (specific) {
+      if (addressObj.house_number && addressObj.road) {
+        return `${addressObj.house_number} ${addressObj.road}, ${broader}`;
+      }
+      return `${specific}, ${broader}`;
+    }
+
+    return [o.geo_locality, o.geo_county, o.geo_state].filter(Boolean).join(", ") || "Unknown Location";
+  };
+
   const renderHistory = () => (
     <div className="card enter-anim full-height">
       <div className="header-row space-between items-center mb-4">
@@ -264,7 +283,7 @@ function App() {
                 <tr key={o.id}>
                   <td>#{o.id}</td>
                   <td>
-                    {[o.geo_locality, o.geo_county, o.geo_state].filter(Boolean).join(", ") || "Unknown Location"}
+                    {getSpecificLocation(o)}
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${o.lat},${o.lon}`}
                       target="_blank"

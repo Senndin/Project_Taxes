@@ -25,6 +25,7 @@ export interface OrderResponse {
       geo_locality: string;
       geo_county: string;
       geo_state: string;
+      geo_raw_response: any;
       breakdown: TaxBreakdown[];
 }
 
