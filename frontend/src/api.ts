@@ -77,7 +77,7 @@ export const api = {
       },
 
       async fetchOrders(page: number = 1, limit: string = '50', ordering: string = '-created_at'): Promise<{ count: number; results: OrderResponse[] }> {
-            const url = `${API_BASE_URL}/orders/?page=${page}&limit=${limit}&ordering=${ordering}`;
+            const url = `${API_BASE_URL}/orders/?page=${page}&limit=${limit}&ordering=${ordering}&_t=${Date.now()}`;
             const response = await fetch(url);
             if (!response.ok) {
                   throw new Error(`API Error: ${response.statusText}`);

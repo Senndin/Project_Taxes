@@ -53,7 +53,7 @@ function App() {
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(interval);
           setIsUploading(false);
-          handleFetchOrders(); // Refresh table after import completes
+          await handleFetchOrders(); // Refresh table immediately after completion
         }
       } catch (err) {
         clearInterval(interval);
@@ -85,6 +85,7 @@ function App() {
         orderingParam += ',-id';
       }
 
+      // Add a cache buster timestamp string appended to ordering or a dummy param to force a network request
       const res = await api.fetchOrders(1, '10000', orderingParam);
       setOrders(res.results || []);
     } catch (err) {
