@@ -133,26 +133,42 @@ class TaxCalculationService:
 
     def fetch_rate(self, state, county, locality, date):
         # Base query for the exact date interval
-        # If State is not NY (e.g., 'New York' vs something else), handle properly according to actual state nomenclature
-        # We assume the database is pre-filled with correctly normalized names.
-
         qs = TaxRateAdmin.objects.filter(
             state__iexact=state, valid_from__lte=date
         ).filter(models.Q(valid_to__isnull=True) | models.Q(valid_to__gte=date))
 
-        # Try matching exact locality first
+        logger.info(f"fetch_rate cascade started for state='{state}', county='{county}', locality='{locality}'")
+
+        # 1. Try matching exact locality first
         if locality:
             exact_match = qs.filter(
                 county__iexact=county, locality__iexact=locality
             ).first()
             if exact_match:
+                logger.info(f"Resolution success: Level 1 (Exact Locality Match) - Found: {exact_match.county} {exact_match.locality}")
                 return exact_match
 
-        # Fallback to county-level generic rate (locality is null or empty, or any default locality seeded for the county)
-        base_county_match = qs.filter(county__iexact=county).first()
+        # 2. Try exact match with normalized county
+        if county:
+            base_county_match = qs.filter(county__iexact=county).first()
+            if base_county_match:
+                logger.info(f"Resolution success: Level 2 (Exact County Match) - Found: {base_county_match.county}")
+                return base_county_match
 
-        if base_county_match:
-            return base_county_match
+            # 3. Fuzzy match: icontains safely without suffix
+            clean_county = county.replace(" County", "").replace(" City", "").strip()
+            if clean_county:
+                fuzzy_match = qs.filter(county__icontains=clean_county).first()
+                if fuzzy_match:
+                    logger.info(f"Resolution success: Level 3 (Fuzzy County Match) - '{county}' matched to '{fuzzy_match.county}'")
+                    return fuzzy_match
 
-        # Complete fallback (just state match)
+        # 4. Fallback to generic State-level rate (empty county field)
+        state_fallback = qs.filter(county__exact="").first()
+        if state_fallback:
+            logger.info(f"Resolution success: Level 4 (State Generic Fallback match) - Returning 4.0% base rate. State={state}")
+            return state_fallback
+
+        # 5. Complete fallback (just state match)
+        logger.warning(f"Resolution failed: Exhausted all tiers for {state}, {county}. Returning first available base rate.")
         return qs.first()

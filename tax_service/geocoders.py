@@ -7,6 +7,37 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def normalize_county(county_str: str, locality_str: str = "") -> str:
+    """
+    Standardizes county strings:
+    - Removes "County" suffix
+    - Maps NYC boroughs to their canonical county names
+    """
+    if not county_str:
+        if locality_str in ['New York City', 'New York', 'Manhattan']:
+            return "New York"
+        elif locality_str == 'Brooklyn':
+            return "Kings"
+        elif locality_str == 'Queens':
+            return "Queens"
+        elif locality_str == 'Bronx':
+            return "Bronx"
+        elif locality_str == 'Staten Island':
+            return "Richmond"
+        return ""
+    
+    county = county_str.strip()
+    if county.lower().endswith(" county"):
+        county = county[:-7].strip()
+    
+    # Also standardize if the provider returned the borough as the county directly
+    if county == "Manhattan": return "New York"
+    if county == "Brooklyn": return "Kings"
+    if county == "Staten Island": return "Richmond"
+
+    return county
+
+
 class GeocodeResult:
     def __init__(self, state, county, locality, raw_response, lat_rounded, lon_rounded):
         self.state = state
@@ -86,6 +117,8 @@ class NominatimProvider(GeocodeProvider):
             # Maybe outside US or ocean
             state = "UNKNOWN"
             county = "UNKNOWN"
+        else:
+            county = normalize_county(county, locality)
 
         result = GeocodeResult(
             state=state,
@@ -134,26 +167,9 @@ class LocalNYSProvider(GeocodeProvider):
             
             # The KD-Tree dataset frequently leaves admin2 blank for NYC boroughs.
             raw_county = match.get('admin2', '')
-            
-            if not raw_county:
-                # Fallback heuristics for New York City coordinates which lack county data in the offline array
-                if assigned_locality in ['New York City', 'New York', 'Manhattan']:
-                    assigned_county = "New York County"
-                elif assigned_locality == 'Brooklyn':
-                    assigned_county = "Kings County"
-                elif assigned_locality == 'Queens':
-                    assigned_county = "Queens County"
-                elif assigned_locality == 'Bronx':
-                    assigned_county = "Bronx County"
-                elif assigned_locality == 'Staten Island':
-                    assigned_county = "Richmond County"
-                else:
-                    assigned_county = "Unknown County"
-            else:
-                assigned_county = raw_county
-                # Normalize "Kings" -> "Kings County" to strictly match DB seed
-                if "County" not in assigned_county and assigned_state == "New York":
-                    assigned_county = f"{assigned_county} County"
+            assigned_county = normalize_county(raw_county, assigned_locality)
+            if not assigned_county:
+                assigned_county = "Unknown"
             
         return GeocodeResult(
             state=assigned_state,
