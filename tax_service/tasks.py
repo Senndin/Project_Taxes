@@ -1,8 +1,8 @@
 import csv
 import io
-import os
 import traceback
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from celery import shared_task
 from .models import ImportJob
@@ -22,7 +22,6 @@ def process_batch(task_self, service, job_id, batch):
                 lat = float(row.get("lat") or row.get("latitude"))
                 lon = float(row.get("lon") or row.get("longitude"))
                 subtotal = row.get("subtotal") or row.get("amount") or "0.00"
-                from django.utils.dateparse import parse_datetime
                 timestamp_str = row.get("timestamp") or row.get("date")
                 if timestamp_str:
                     dt = parse_datetime(timestamp_str)
@@ -54,7 +53,7 @@ def import_orders_task(self, job_id, file_content):
     job.status = "PROCESSING"
     job.started_at = timezone.now()
     # Pre-compute total rows approximately
-    total_lines = len(file_content.strip().split('\n')) - 1
+    total_lines = len(file_content.strip().split("\n")) - 1
     job.total_rows = max(total_lines, 0)
     job.save()
 
