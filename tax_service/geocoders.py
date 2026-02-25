@@ -119,7 +119,8 @@ class LocalNYSProvider(GeocodeProvider):
         
         # Search returns a list of dictionaries. For example:
         # [{'lat': '41.92704', 'lon': '-73.99736', 'name': 'Kingston', 'admin1': 'New York', 'admin2': 'Ulster County', 'cc': 'US'}]
-        results = rg.search((lat, lon))
+        # mode=1 explicitly forces single-process mode because Celery daemons cannot spawn children.
+        results = rg.search((lat, lon), mode=1)
         
         assigned_state = "Unknown State"
         assigned_county = "Unknown County"

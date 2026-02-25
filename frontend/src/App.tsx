@@ -194,16 +194,19 @@ function App() {
               style={{ width: `${uploadStatus.total_rows ? (uploadStatus.processed_rows / uploadStatus.total_rows) * 100 : 0}% ` }}
             ></div>
           </div>
-          <p className="mt-2 text-sm">Processed: {uploadStatus.processed_rows} | Errors: {uploadStatus.error_rows}</p>
+          <p className="mt-2 text-sm">Processed: {uploadStatus.processed_rows} | Success: {uploadStatus.success_rows} | Errors: {uploadStatus.failed_rows}</p>
 
-          {uploadStatus.errors && Object.keys(uploadStatus.errors).length > 0 && (
+          {uploadStatus.error_report && uploadStatus.error_report.length > 0 && (
             <div className="error-logs">
               <h4>Error Logs</h4>
               <ul className="error-list">
-                {Object.entries(uploadStatus.errors).map(([row, err]) => (
-                  <li key={row}><strong>Row {row}:</strong> {err as string}</li>
+                {uploadStatus.error_report.slice(0, 100).map((errObj, idx) => (
+                  <li key={idx}><strong>Row {errObj.row}:</strong> {errObj.error}</li>
                 ))}
               </ul>
+              {uploadStatus.error_report.length > 100 && (
+                <p className="text-sm mt-2 text-gray-400">...and {uploadStatus.error_report.length - 100} more errors</p>
+              )}
             </div>
           )}
         </div>

@@ -34,8 +34,9 @@ export interface ImportResponse {
       status: string;
       total_rows: number;
       processed_rows: number;
-      error_rows: number;
-      errors: Record<string, string>;
+      success_rows: number;
+      failed_rows: number;
+      error_report: Array<{ row: number, error: string }>;
       created_at: string;
 }
 
