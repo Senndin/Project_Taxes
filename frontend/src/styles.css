@@ -809,6 +809,43 @@ button:disabled {
 }
 
 /* ========================================= */
+/*       Custom Glass Toasts                 */
+/* ========================================= */
+
+.Toastify__toast-container {
+      margin-top: 1rem;
+}
+
+.glass-toast {
+      background: rgba(255, 255, 255, 0.65) !important;
+      backdrop-filter: blur(20px) saturate(150%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      border-radius: 1rem !important;
+      color: var(--text-main) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+      font-family: var(--font-family) !important;
+}
+
+.glass-toast .Toastify__close-button {
+      color: var(--text-muted) !important;
+}
+
+.glass-toast .Toastify__progress-bar {
+      background: var(--accent-primary) !important;
+      opacity: 0.8 !important;
+}
+
+/* Specific color overrides for Info/Error/Success icons if needed */
+.Toastify__toast--success {
+      border-left: 4px solid var(--success) !important;
+}
+
+.Toastify__toast--error {
+      border-left: 4px solid var(--error) !important;
+}
+
+/* ========================================= */
 /*       Mobile Responsiveness Hacks         */
 /* ========================================= */
 

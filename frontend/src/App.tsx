@@ -410,16 +410,17 @@ function App() {
   return (
     <>
       <ToastContainer
-        position="bottom-right"
+        position="top-center"
         autoClose={4000}
         hideProgressBar={false}
-        newestOnTop={false}
+        newestOnTop={true}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="colored"
+        theme="light"
+        toastClassName="glass-toast"
       />
       <div className="layout">
         <header className="header">
