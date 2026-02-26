@@ -45,6 +45,7 @@ function App() {
         subtotal
       });
       setCalcResult(res);
+      toast.success('Successfully calculated tax and added order!');
       handleFetchOrders(); // Refresh table after new calculation
     } catch (err) {
       toast.error('Failed to calculate tax. Please check coordinates and subtotal.');
@@ -61,6 +62,11 @@ function App() {
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(interval);
           setIsUploading(false);
+          if (status.status === 'COMPLETED') {
+            toast.success('CSV successfully uploaded and processed!');
+          } else {
+            toast.error('CSV processing failed on the server.');
+          }
           await handleFetchOrders(); // Refresh table immediately after completion
         }
       } catch (err) {
@@ -138,6 +144,7 @@ function App() {
       setOrdersLoading(true);
       try {
         await api.clearOrders();
+        toast.success('All orders successfully deleted.');
         await handleFetchOrders();
       } catch (err) {
         toast.error('Failed to clear orders from database.');
@@ -412,7 +419,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="colored"
       />
       <div className="layout">
         <header className="header">
