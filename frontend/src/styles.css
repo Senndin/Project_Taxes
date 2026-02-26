@@ -798,3 +798,95 @@ button:disabled {
             transform: scaleY(1) translateY(0);
       }
 }
+
+/* ========================================= */
+/*       Mobile Responsiveness Hacks         */
+/* ========================================= */
+
+@media (max-width: 768px) {
+      .layout {
+            padding: 1rem;
+            gap: 1rem;
+            margin-top: 0;
+      }
+
+      .card {
+            padding: 1rem;
+            border-radius: 1rem;
+      }
+
+      h1 {
+            font-size: 1.8rem;
+      }
+
+      .logo-icon {
+            font-size: 2rem;
+      }
+
+      .subtitle {
+            font-size: 0.95rem;
+      }
+
+      /* Stack control row on small screens */
+      .header-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+      }
+
+      .header-row h2 {
+            margin-bottom: 0;
+            text-align: center;
+      }
+
+      .table-toolbar {
+            justify-content: space-between;
+            width: 100%;
+      }
+
+      .action-buttons {
+            width: 100%;
+            display: flex;
+            gap: 0.5rem;
+      }
+
+      .action-buttons button {
+            flex: 1;
+      }
+
+      /* Allow table to scroll horizontally without breaking layout */
+      .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -1rem;
+            /* Negative margin to let scroll bleed to card edges */
+            padding: 0 1rem;
+            /* Pad inner content back */
+      }
+
+      .history-table {
+            min-width: 600px;
+            /* Force min width to trigger scroll instead of squish */
+      }
+
+      /* Upload area mobile tweaks */
+      .upload-area {
+            padding: 1.5rem 1rem;
+      }
+
+      .upload-icon {
+            font-size: 2.5rem;
+      }
+}
+
+@media (max-width: 480px) {
+      .table-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+      }
+
+      .search-box {
+            width: 100%;
+      }
+}
