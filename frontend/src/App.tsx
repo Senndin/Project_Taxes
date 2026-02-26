@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './styles.css';
 import type { OrderResponse, ImportResponse } from './api';
 import { api } from './api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -43,9 +45,10 @@ function App() {
         subtotal
       });
       setCalcResult(res);
+      toast.success('Successfully calculated tax and added order!');
       handleFetchOrders(); // Refresh table after new calculation
     } catch (err) {
-      alert('Error calculating tax');
+      toast.error('Failed to calculate tax. Please check coordinates and subtotal.');
     } finally {
       setCalcLoading(false);
     }
@@ -59,9 +62,15 @@ function App() {
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(interval);
           setIsUploading(false);
+          if (status.status === 'COMPLETED') {
+            toast.success('CSV successfully uploaded and processed!');
+          } else {
+            toast.error('CSV processing failed on the server.');
+          }
           await handleFetchOrders(); // Refresh table immediately after completion
         }
       } catch (err) {
+        toast.error('Lost connection while checking upload status.');
         clearInterval(interval);
         setIsUploading(false);
       }
@@ -73,10 +82,12 @@ function App() {
     setUploadError(null);
     setUploadStatus(null);
     setIsUploading(true);
+    toast.info('Upload started. Calculating taxes for CSV rows...');
     try {
       const res = await api.uploadCSV(file);
       pollImportStatus(res.id);
     } catch (err) {
+      toast.error('Failed to upload CSV file. Server error.');
       setUploadError('Failed to upload CSV');
       setIsUploading(false);
     }
@@ -133,9 +144,10 @@ function App() {
       setOrdersLoading(true);
       try {
         await api.clearOrders();
+        toast.success('All orders successfully deleted.');
         await handleFetchOrders();
       } catch (err) {
-        alert('Failed to clear orders');
+        toast.error('Failed to clear orders from database.');
         setOrdersLoading(false);
       }
     }
@@ -396,29 +408,44 @@ function App() {
   );
 
   return (
-    <div className="layout">
-      <header className="header">
-        <div className="logo-container">
-          <div className="logo-icon">🌿</div>
-          <h1>Instant Wellness Kits</h1>
-        </div>
-        <p className="subtitle">NYS Sales Tax Engine Dashboard</p>
-      </header>
+    <>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        toastClassName="glass-toast"
+      />
+      <div className="layout">
+        <header className="header">
+          <div className="logo-container">
+            <div className="logo-icon">🌿</div>
+            <h1>Instant Wellness Kits</h1>
+          </div>
+          <p className="subtitle">NYS Sales Tax Engine Dashboard</p>
+        </header>
 
-      <main className="dashboard-grid">
-        <div className="dashboard-left">
-          {renderCalculator()}
-          {renderUploader()}
-        </div>
-        <div className="dashboard-right">
-          {renderHistory()}
-        </div>
-      </main>
+        <main className="dashboard-grid">
+          <div className="dashboard-left">
+            {renderCalculator()}
+            {renderUploader()}
+          </div>
+          <div className="dashboard-right">
+            {renderHistory()}
+          </div>
+        </main>
 
-      <footer className="footer">
-        <p>Instant Wellness Kits Drones © {new Date().getFullYear()} - NYC Hackathon Edition</p>
-      </footer>
-    </div>
+        <footer className="footer">
+          <p>Instant Wellness Kits Drones © {new Date().getFullYear()} - NYC Hackathon Edition</p>
+        </footer>
+      </div>
+    </>
   );
 }
 
