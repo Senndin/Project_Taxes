@@ -817,32 +817,33 @@ button:disabled {
 }
 
 .glass-toast {
-      background: rgba(255, 255, 255, 0.65) !important;
-      backdrop-filter: blur(20px) saturate(150%) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.4) !important;
-      border-radius: 1rem !important;
+      background: rgba(255, 255, 255, 0.45) !important;
+      backdrop-filter: blur(40px) saturate(150%) !important;
+      -webkit-backdrop-filter: blur(40px) saturate(150%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.8) !important;
+      border-left: 1px solid rgba(255, 255, 255, 0.4) !important;
+      border-radius: 1.5rem !important;
       color: var(--text-main) !important;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1) !important;
       font-family: var(--font-family) !important;
+      padding: 1rem !important;
 }
 
 .glass-toast .Toastify__close-button {
       color: var(--text-muted) !important;
+      opacity: 0.7 !important;
 }
 
-.glass-toast .Toastify__progress-bar {
-      background: var(--accent-primary) !important;
-      opacity: 0.8 !important;
-}
-
-/* Specific color overrides for Info/Error/Success icons if needed */
+/* Specific overrides to keep icons but remove harsh left borders */
 .Toastify__toast--success {
-      border-left: 4px solid var(--success) !important;
+      border: 1px solid rgba(52, 199, 89, 0.3) !important;
+      background: rgba(255, 255, 255, 0.5) !important;
 }
 
 .Toastify__toast--error {
-      border-left: 4px solid var(--error) !important;
+      border: 1px solid rgba(255, 59, 48, 0.3) !important;
+      background: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* ========================================= */
