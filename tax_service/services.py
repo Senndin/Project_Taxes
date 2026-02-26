@@ -2,7 +2,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction, models
 from django.utils import timezone
 from .models import Order, TaxRateAdmin
-from .geocoders import GeocodeProvider, GeocodeResult, LocalNYSProvider
+from .geocoders import GeocodeProvider, GeocodeResult, VectorPolygonProvider
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class TaxCalculationService:
     def __init__(self, geocoder=None):
-        self.geocoder = geocoder or LocalNYSProvider()
+        self.geocoder = geocoder or VectorPolygonProvider()
 
     @transaction.atomic
     def process_order(

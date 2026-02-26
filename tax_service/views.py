@@ -10,7 +10,7 @@ from .serializers import (
     ImportJobCreateSerializer,
 )
 from .services import TaxCalculationService
-from .geocoders import LocalNYSProvider
+from .geocoders import VectorPolygonProvider
 from .tasks import import_orders_task
 
 
@@ -30,7 +30,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        service = TaxCalculationService(geocoder=LocalNYSProvider())
+        service = TaxCalculationService(geocoder=VectorPolygonProvider())
         order = service.process_order(
             lat=data["lat"],
             lon=data["lon"],
