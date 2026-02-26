@@ -874,8 +874,18 @@ button:disabled {
       }
 
       .history-table {
-            min-width: 600px;
+            min-width: 450px;
             /* Force min width to trigger scroll instead of squish */
+      }
+
+      .history-table th,
+      .history-table td {
+            padding: 0.6rem 0.5rem;
+            font-size: 0.85rem;
+      }
+
+      .history-table th {
+            font-size: 0.75rem;
       }
 
       /* Upload area mobile tweaks */
