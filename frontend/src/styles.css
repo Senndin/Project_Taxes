@@ -116,11 +116,13 @@ h1 {
       display: flex;
       flex-direction: column;
       gap: 2rem;
+      min-width: 0;
 }
 
 .dashboard-right {
       display: flex;
       flex-direction: column;
+      min-width: 0;
 }
 
 .full-height {
@@ -242,6 +244,7 @@ button:disabled {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      word-break: break-word;
 }
 
 .divider {
@@ -271,9 +274,15 @@ button:disabled {
       border-radius: 0.5rem;
 }
 
+.breakdown-item span:first-child {
+      word-break: break-word;
+      padding-right: 0.5rem;
+}
+
 .breakdown-item span:last-child {
       color: var(--text-main);
       font-weight: 500;
+      flex-shrink: 0;
 }
 
 /* Drag & Drop Area */
