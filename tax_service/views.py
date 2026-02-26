@@ -17,8 +17,8 @@ from .tasks import import_orders_task
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().order_by("-created_at")
     filter_backends = [filters.OrderingFilter]
-    ordering_fields = '__all__'
-    ordering = ['-created_at']
+    ordering_fields = "__all__"
+    ordering = ["-created_at"]
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -43,18 +43,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def clear(self, request):
         from django.db import connection
+
         with connection.cursor() as cursor:
-            if connection.vendor == 'postgresql':
-                table_name = connection.ops.quote_name(Order._meta.db_table)
-                cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;")
-            elif connection.vendor == 'sqlite':
-                Order.objects.all().delete()
-                try:
-                    cursor.execute("DELETE FROM sqlite_sequence WHERE name='tax_service_order';")
-                except Exception:
-                    pass
-            else:
-                Order.objects.all().delete()
+            table_name = connection.ops.quote_name(Order._meta.db_table)
+            cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["post"], parser_classes=[MultiPartParser])
@@ -64,11 +56,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         file_obj = serializer.validated_data["file"]
 
         job = ImportJob.objects.create()
-        
+
         try:
-            file_content = file_obj.read().decode('utf-8-sig')
+            file_content = file_obj.read().decode("utf-8-sig")
         except UnicodeDecodeError:
-            file_content = file_obj.read().decode('latin-1')
+            file_content = file_obj.read().decode("latin-1")
 
         # Fire off celery task passing the content directly via Redis.
         # This completely avoids Heroku's ephemeral/isolated filesystem issues.

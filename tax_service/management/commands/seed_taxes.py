@@ -8,10 +8,15 @@ class Command(BaseCommand):
     help = "Seeds the database with foundational New York State sales tax jurisdictions"
 
     def handle(self, *args, **kwargs):
-        # always run this to sync data since arrays get updated 
+        # always run this to sync data since arrays get updated
         pass
 
-        now = timezone.now()
+        # Use a fixed historical date so rates apply to orders with ANY timestamp,
+        # including past-dated CSV imports. This was the root cause of tax=0 bug:
+        # timezone.now() meant rates only matched orders from "right now" onwards.
+        from datetime import datetime
+
+        valid_from_date = timezone.make_aware(datetime(2020, 1, 1))
 
         # New York State Base Rate is 4%
         state_rate = Decimal("0.0400")
@@ -40,10 +45,10 @@ class Command(BaseCommand):
             {"county": "Suffolk County", "rate_county": "0.0463"},
             {"county": "Westchester County", "rate_county": "0.0438"},
             # Generic State fallback (if county is unknown but state is NY) 0% county tax
-            {"county": "", "rate_county": "0.0000"} 
+            {"county": "", "rate_county": "0.0000"},
         ]
 
-        TaxRateAdmin.objects.all().delete() # ensure idempotency for script reruns
+        TaxRateAdmin.objects.all().delete()  # ensure idempotency for script reruns
         created = 0
         for data in rates:
             TaxRateAdmin.objects.create(
@@ -54,7 +59,7 @@ class Command(BaseCommand):
                 rate_county=Decimal(data["rate_county"]),
                 rate_locality=Decimal("0.0000"),
                 rate_special=None,
-                valid_from=now,
+                valid_from=valid_from_date,
             )
             created += 1
 
