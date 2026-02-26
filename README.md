@@ -1,101 +1,98 @@
-# Enterprise Tax Calculation & Registry Platform
+# Instant Wellness Kits – Tax Recovery System
 
-This project is a high-performance, robust, and scalable Tax Calculation and Registry Platform tailored primarily for New York State (NYS) compliance, while effortlessly handling out-of-state and international zero-tax edge cases. Designed originally for a hackathon, it evolved into an enterprise-grade backend processing pipeline wrapped in a lightning-fast React frontend.
+Цей проект є enterprise-рівня системою розрахунку податків та реєстру транзакцій для сервісу доставки дронами **Instant Wellness Kits** у штаті Нью-Йорк (NYS). 
 
-## 🚀 Key Features
-
-### 1. **100% Offline Geocoding & Rate-Limit Immunity**
-
-Unlike typical geocoding implementations that rely on rate-limited external APIs (like OpenStreetMap's Nominatim, which actively bans IPs exceeding 1 request/second), this platform utilizes a custom **Offline `LocalNYSProvider`**.
-Powered by the C-bound `reverse_geocoder` library and `scipy` KD-Trees, it accurately resolves precise GPS coordinates (Latitude/Longitude) to any New York State County or City completely offline in milliseconds. **Data ingestion limits are theoretically infinite**, bound only by PostgreSQL write speeds, allowing massive bulk processing without third-party bottlenecks or connection timeouts.
-
-### 2. **Asynchronous Bulk CSV Processing (Celery + Redis)**
-
-Upload thousands of tax records in a single CSV file without freezing the UI.
-
-- The React frontend uploads the raw CSV to the Django backend.
-- Django securely offloads row-by-row parsing, geocoding validation, and tax calculation to a **Celery Worker Pool**.
-- **Linux Daemon Safety:** Our C-bound KD-Tree search enforces `mode=1` (single-threaded execution) to prevent catastrophic multiprocessing lockups during heavy ingestion of 11,000+ rows.
-- Progress is stored immutably in Redis and streamed live to the UI via intelligent polling.
-
-### 3. **Mathematical Precision & Authentic NYS Jurisdictions**
-
-The PostgreSQL database is pre-seeded with genuine 2024 New York State county sales tax rates.
-
-- E.g., An order in Erie County perfectly calculates `8.75%` (4% State + 4.75% County).
-- Out-of-state or international deliveries (e.g., Quebec, Pennsylvania) gracefully fall back to `0.00%` tax due to **Sales Tax Nexus** rules, displaying an explicit "Out of State / No Nexus" message rather than failing.
-
-### 4. **Progressive "Live" Streaming Architecture (Infinite Scroll)**
-
-The *"Recent Orders Registry"* table leverages an `IntersectionObserver`-based infinite scroll algorithm.
-
-- It fetches and renders the first 50 rows instantly (under `10ms` render time) and seamlessly streams subsequent records as the user scrolls downward.
-- Creates a `60fps` native, pagination-free experience even when viewing a database of 50,000+ chronological transactions.
-
-### 5. **Compliance with Test Task Requirements**
-- **Business Logic Focus**: Prioritizes tax compliance for NYS over pure technical showcase, perfectly interpreting coordinates into actual NY tax jurisdictions.
-- **Admin Frontend**: 
-  - ✅ **Import CSV**: Upload CSV, system processes asynchronously, calculates taxes, and saves.
-  - ✅ **Manual Create**: Manual order creation (lat, lon, subtotal) with instant calculation.
-  - ✅ **Orders List**: Table of orders with calculated taxes, sorting/filtering, and endless scroll pagination.
-- **Backend APIs**:
-  - ✅ `POST /api/orders/import_csv` (CSV Import)
-  - ✅ `POST /api/orders/` (Manual Create)
-  - ✅ `GET /api/orders/` (List + pagination + filters)
-- **Data Input/Output Match**:
-  - ✅ Inputs: `latitude`, `longitude`, `subtotal`, `timestamp`.
-  - ✅ Outputs: `composite_tax_rate`, `tax_amount`, `total_amount`, and a detailed `breakdown` (including the bonus `jurisdictions`).
-- **Tech Stack Match**:
-  - While Python/Django was chosen over Node.js/TypeScript for superior handling of big data (Celery) and Decimal arithmetic, the architecture meets all core functional demands robustly. React and SQL (PostgreSQL via Heroku) are fully utilized.
+**Суть проекту:** Бізнес потребує негайного (протягом 48 годин) впровадження системи, яка здатна з математичною точністю розраховувати Composite Sales Tax (сумарний податок з продажу) за GPS-координатами доставки, щоб забезпечити комплаєнс із податковими нормами штату.
 
 ---
 
-## 🛠️ Technology Stack
+## 🎯 Бізнес-проблема та ухвалені рішення (Business Focus)
 
-- **Backend:** Python 3.13, Django 5.x, Django Rest Framework (DRF)
-- **Task Queue:** Celery, Redis
+Найбільшим ризиком для бізнесу була залежність від зовнішніх API (напр. Google Maps чи OpenStreetMap Nominatim), які мають жорсткі ліміти запитів (Rate Limits) і можуть блокувати масовий імпорт CSV на 11,000+ рядків, створюючи фінансові втрати та затримки.
+
+### 1. 100% Offline Geocoding (`VectorPolygonProvider`)
+Щоб гарантувати стабільність та нульову вартість транзакцій, ми розробили повністю автономний геокодер.
+- На основі відкритих даних (GeoJSON) геометрії 62 округів штату Нью-Йорк, застосовано алгоритм **Ray-Casting** (Point-in-Polygon).
+- Координати миттєво мапляться на відповідний county.
+- **Бізнес-цінність:** Безлімітний, миттєвий парсинг будь-якої кількості транзакцій. Якщо доставка відбувається за межі NYS, система автоматично присвоює юрисдикцію "Out of State" і встановлює податок 0.00% (No Nexus).
+
+### 2. "The Zero-Tax Fix" (Виправлення критичних багів імпорту)
+Під час стрес-тесту масового CSV-імпорту податок для всіх замовлень розраховувався як `$0.00`. Було виявлено та усунуто три критичні проблеми:
+1. **Ініціалізація координат та Scope-помилки:** У `LocalNYSProvider` виправлено відсутнє заокруглення `lat_rounded`/`lon_rounded` та звернення до неініціалізованої змінної `feature`, що ламало кешування результатів геокодера.
+2. **Баг з Timestamp (`valid_from`):** Скрипт ініціалізації БД (`seed_taxes`) встановлював `valid_from = timezone.now()` для всіх податкових ставок. Через це фільтр `fetch_rate` відкидав CSV-замовлення, датовані минулим часом (напр. 2 тижні тому). **Рішення:** Зафіксовано безпечну історичну дату (`2020-01-01`), що відновило 100% точність розрахунків історичних транзакцій.
+
+---
+
+## 🛠 Технологічний стек та Dev/Prod Parity
+
+Ми використовуємо сучасний, стабільний стек, готовий до великих навантажень:
+- **Backend:** Python 3.13, Django 6.0, Django REST Framework
 - **Database:** PostgreSQL (Heroku Postgres)
-- **Geocoding:** `reverse_geocoder` (KD-Tree offline), `scipy`, `numpy`
-- **Frontend:** React 18, TypeScript, Vite, Vanilla CSS
-- **Deployment & Hosting:** Heroku (Web Dynos + Worker Dynos)
+- **Task Queue:** Celery, Redis (Rediss TLS на Prod)
+- **Web Server:** Gunicorn, WhiteNoise
+
+### Уніфікація оточень (Dev/Prod Parity)
+Щоб уникнути класичної проблеми "працює локально, падає на проді", ми максимально наблизили локальне середовище до конфігурації Heroku:
+- **Database Unification:** Відмова від локального SQLite на користь Docker PostgreSQL (`localhost:5432`). Це усунуло помилки `database is locked` при конкурентному записі масивів від Celery та забезпечило ідентичну поведінку типів `Decimal` і `JSONField`.
+- **Environment Unified:** Пакет `django-environ` керує конфігураціями. Локальний файл `.env` ідентично дублює Config Vars з Heroku.
+- **Runtime Consistency:** Додано `runtime.txt` для жорсткої фіксації Python 3.13.0 на Heroku. Статика роздається через WhiteNoise в обох середовищах.
+
+- **Посилання на Heroku:** https://hakaton-proj1-752215a504fa.herokuapp.com/
 
 ---
 
-## ⚙️ How to Run Locally
+## 🚀 Інструкція із запуску (Step-by-Step)
 
-If you wish to spin up the application on your own local machine, this repository includes a fully configured `docker-compose.yml` to instantly boot the entire stack (Postgres + Redis + Django Web + Celery Worker + React Frontend).
+### Локальний запуск (Через Docker Compose - Рекомендовано)
+Найшвидший спосіб підняти Database, Redis, Celery, Django та React Frontend.
+```bash
+git clone <repository_url> .
+docker-compose up -d --build
+```
+Доступні сервіси: UI (`http://localhost`), API (`http://localhost:8000/api/`), Admin (`http://localhost:8000/admin/`).
 
-### Prerequisites
+### Локальний запуск (Без Docker, ручний Python venv)
+Вимагає попередньо встановлених Postgres та Redis.
+```bash
+# 1. Віртуальне середовище
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-- [Docker Engine & Docker Compose](https://docs.docker.com/get-docker/) installed.
-- Ensure ports `80` (Frontend), `8000` (Backend server), and `6379` (Redis) are available on your machine.
+# 2. Налаштування .env (вказати ваш DATABASE_URL та REDIS_URL)
 
-### Quickstart
+# 3. Міграції та завантаження ставок NYS
+python manage.py migrate
+python manage.py seed_taxes
 
-1. **Clone the project & Boot up Docker services:**
+# 4. Створення суперкористувача для доступу до Адмінки
+python manage.py createsuperuser
 
-   ```bash
-   git clone <repository_url> .
-   docker-compose up -d --build
-   ```
+# 5. Запуск серверів (Django + Celery)
+gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload
+celery -A config worker -l info
+```
 
-   *(Docker will pull the images, initialize the local SQLite database, run Python migrations, start Redis, start the Celery worker, and boot both the backend API and the frontend Nginx server automatically).*
-
-2. **Access the Application:**
-   - **Frontend UI (React Calculator & Registry):** <http://localhost> *(Port 80)*
-   - **Backend API Interface:** <http://localhost:8000/api/>
-   - **Django Admin Panel:** <http://localhost:8000/admin/>
-
-3. **Stop & Destroy Containers:**
-
-   ```bash
-   docker-compose down -v
-   ```
+### Запуск через Heroku (Production)
+Проект має готовий пайплайн розгортання:
+https://hakaton-proj1-752215a504fa.herokuapp.com/
 
 ---
 
-## 🎨 UI Overview
+## 📚 Документація API та Адмінки
 
-- **Manual Order Registration (`/`):** A sleek glassmorphic card where administrators input manual deliveries. Calculates taxes and registers the entry instantly.
-- **Bulk CSV Umschlag:** Drag-and-drop a `.csv` file. Features an animated progress bar and deep Django `Exception` traceback unpacking for detailed row failures.
-- **Registry Table:** A fast, infinitely scrolling ledger of historical financial transactions. Interactive sub-rows (`+`) dynamically expand to reveal the specific state, county, and locality tax breakdown jurisdictions for every individual delivery coordinate.
+### Ключові API Endpoints
+- **`POST /api/orders/import_csv/`**: Асинхронний імпорт. Приймає файл, негайно повертає `202 Accepted` з ID задачі. Celery розбирає файл, виконує геокодування і масовий запис без блокування головного треду.
+- **`POST /api/orders/`**: Створення manual замовлення. Приймає `lat`, `lon`, `subtotal` та `timestamp`.
+- **`GET /api/orders/`**: Отримання всіх замовлень з можливістю сортування, пагінації та фільтрації.
+
+### Розширена Django Адмінка (`/admin/`)
+Для полегшення роботи Operational Team адмінка доповнена наступним функціоналом:
+- **Rich Display & Filters:** Миттєва фільтрація замовлень за `geo_state` і `geo_county`.
+- **Read-only Breakdown:** Детальний перегляд розрахунку податку. Поле `breakdown` (JSON) візуально показує ставки State/County/City (наприклад, State: 4.0% + Kings County: 4.88%). Сирі гео-дані зберігаються в `geo_raw_response` для аудиту.
+
+---
+
+## 📌 Припущення (Assumptions)
+- **Точність даних:** Усі бази податкових ставок (`seed_taxes`) та полігони геометрії округів (`nys_counties.geojson`) взяті з відкритих урядових джерел (NYS Tax Department та NYS GIS Clearinghouse). Приймається, що ці дані є актуальними на момент розрахунків.
+- **Відсутність точної адреси:** Приймається, що визначення податкового Nexus лише за GPS-координатами без валідації поштової адреси / ZIP-коду відповідає бізнес-вимогам клієнта до швидкості.
